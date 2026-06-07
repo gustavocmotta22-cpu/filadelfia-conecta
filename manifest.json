@@ -1,0 +1,26 @@
+{
+  "name": "Igreja Presbiteriana Filadélfia",
+  "short_name": "IPF",
+  "description": "Comunhão que edifica. Palavra que transforma.",
+  "start_url": "/filadelfia-conecta/",
+  "scope": "/filadelfia-conecta/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F4D3A",
+  "theme_color": "#0F4D3A",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
