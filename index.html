@@ -22,7 +22,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:
 input,textarea{font-family:inherit}
 
 #splash{position:fixed;inset:0;max-width:430px;margin:0 auto;z-index:9999;background:linear-gradient(160deg,#0F4D3A 0%,#1a6b50 50%,#2D7A5F 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease}
-#splash.hide{opacity:0;pointer-events:none}
+#splash.hide{opacity:0;pointer-events:none;display:none}
 .sp-logo{width:130px;height:130px;border-radius:50%;background:#fff;padding:14px;box-shadow:0 0 60px rgba(255,255,255,.2);margin-bottom:24px;display:flex;align-items:center;justify-content:center}
 .sp-logo img{width:102px;height:102px;object-fit:contain;border-radius:50%}
 .sp-church{color:rgba(255,255,255,.7);font-size:13px;letter-spacing:4px;text-transform:uppercase;font-weight:300}
@@ -46,7 +46,7 @@ input,textarea{font-family:inherit}
 .wm-btn{width:100%;background:#0F4D3A;color:#fff;font-weight:700;font-size:15px;padding:15px;border-radius:14px;box-shadow:0 8px 24px rgba(15,77,58,.3);margin-bottom:10px;cursor:pointer;border:none;font-family:'Inter',sans-serif}
 .wm-skip{width:100%;color:#9CA3AF;font-size:13px;padding:8px;text-align:center;cursor:pointer;border:none;background:none;font-family:'Inter',sans-serif}
 
-#app{display:none}
+#app{display:block}
 .screen{display:none;min-height:100vh;padding-bottom:80px}
 .screen.active{display:block;animation:su .3s ease}
 
@@ -776,6 +776,7 @@ function fecharBanner(){ var b=document.getElementById('install-banner'); if(b) 
 function initApp(){
   var sp=document.getElementById('splash');
   if(sp){ sp.style.opacity='0'; sp.style.transition='opacity 0.5s'; setTimeout(function(){ sp.style.display='none'; },500); }
+  var ap=document.getElementById('app'); if(ap) ap.style.display='block';
   try{ var d=new Date(); var el=document.getElementById('ddate'); if(el) el.textContent=d.toLocaleDateString('pt-BR'); }catch(e){}
   try{ var sv=localStorage.getItem('adm'); if(sv){ adm=JSON.parse(sv); aupd(); } }catch(e){}
   try{ if(!localStorage.getItem('wpp_joined')){ setTimeout(function(){ var m=document.getElementById('wmodal'); if(m) m.classList.add('show'); },5000); } }catch(e){}
