@@ -859,23 +859,33 @@ function cadAniv(){
 
 function carregarAniversariantes(){
   var lista=document.getElementById('aniv-lista'); if(!lista) return;
-  var mesAtual=new Date().getMonth()+1;
+  var hoje=new Date();
+  var mesAtual=hoje.getMonth()+1;
+  var nomesMes=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var abrevMes=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  // Atualizar título do card
+  var titulo=document.getElementById('aniv-mes-titulo');
+  if(titulo) titulo.textContent='Aniversariantes de '+nomesMes[mesAtual-1];
+  lista.innerHTML='<div style="text-align:center;padding:20px;color:#9CA3AF;font-size:13px">Carregando...</div>';
   db.collection('aniversariantes').get().then(function(snap){
     var html='';
+    var count=0;
     snap.forEach(function(doc){
       var av=doc.data(); var parts=(av.data||'').split('-'); var mes=parts.length>=2?parseInt(parts[1]):0;
       if(mes===mesAtual){
+        count++;
         var dia=parts[2]||'?';
-        var fotoHtml=av.foto?'<img src="'+av.foto+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #e8f5f0">':'<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#0F4D3A,#2D7A5F);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0">&#127874;</div>';
+        var mesAbrev=abrevMes[mes-1]||'';
+        var fotoHtml=av.foto?'<img src="'+av.foto+'" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #e8f5f0">':'<div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#0F4D3A,#2D7A5F);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;flex-shrink:0">&#127874;</div>';
         html+='<div class="card cp" style="margin-bottom:10px;display:flex;align-items:center;gap:12px">'
-          +'<div style="background:linear-gradient(135deg,#0F4D3A,#2D7A5F);color:#fff;border-radius:12px;padding:8px 10px;text-align:center;min-width:46px;flex-shrink:0"><div style="font-size:19px;font-weight:800;line-height:1">'+dia+'</div><div style="font-size:9px;text-transform:uppercase">Jun</div></div>'
+          +'<div style="background:linear-gradient(135deg,#0F4D3A,#2D7A5F);color:#fff;border-radius:12px;padding:8px 10px;text-align:center;min-width:46px;flex-shrink:0"><div style="font-size:19px;font-weight:800;line-height:1">'+dia+'</div><div style="font-size:9px;text-transform:uppercase">'+mesAbrev+'</div></div>'
           +fotoHtml
           +'<div style="flex:1"><div style="color:#0F4D3A;font-weight:700;font-size:15px">'+av.nome+'</div>'
           +(av.zap?'<a href="https://wa.me/55'+av.zap.replace(/\D/g,'')+'?text=Feliz%20aniversario%20'+encodeURIComponent(av.nome)+'!%20Que%20Deus%20te%20abencoe!%20IPF" target="_blank" style="background:#25D366;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;display:inline-block;margin-top:5px">&#128172; Parabenizar</a>':'')
           +'</div></div>';
       }
     });
-    lista.innerHTML=html||'<div style="text-align:center;color:#9CA3AF;padding:20px">Nenhum aniversariante este mes</div>';
+    lista.innerHTML=count>0?html:'<div style="text-align:center;color:#9CA3AF;padding:20px;font-size:14px">Nenhum aniversariante em '+nomesMes[mesAtual-1]+'.<br>Cadastre-se abaixo!</div>';
   }).catch(function(){});
 }
 
