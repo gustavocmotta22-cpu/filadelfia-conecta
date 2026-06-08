@@ -158,6 +158,9 @@ textarea.fi{resize:none;height:100px}
 .ib-btn{background:#0F4D3A;color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0}
 .ib-close{color:#D1D5DB;font-size:20px;cursor:pointer;padding:4px;background:none;border:none;flex-shrink:0}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <div id="splash">
@@ -921,48 +924,167 @@ function carregarDevocionalDia(){
 }
 
 function compartilharDevo(){
-  var titulo=(document.getElementById('devo-titulo-txt')||{textContent:''}).textContent;
-  var ver=(document.getElementById('devo-ver-txt')||{textContent:''}).textContent;
-  var ref=(document.getElementById('devo-ref-txt')||{textContent:''}).textContent;
-  var reflex=(document.getElementById('devo-ref-body')||{textContent:''}).textContent;
-  var aplic=(document.getElementById('devo-aplic-body')||{textContent:''}).textContent;
-  var oracao=(document.getElementById('devo-oracao-body')||{textContent:''}).textContent;
+  var titulo=(document.getElementById('devo-titulo-txt')||{textContent:''}).textContent||'Devocional';
+  var ver=(document.getElementById('devo-ver-txt')||{textContent:''}).textContent||'';
+  var ref=(document.getElementById('devo-ref-txt')||{textContent:''}).textContent||'';
+  var reflex=(document.getElementById('devo-ref-body')||{textContent:''}).textContent||'';
+  var aplic=(document.getElementById('devo-aplic-body')||{textContent:''}).textContent||'';
+  var oracao=(document.getElementById('devo-oracao-body')||{textContent:''}).textContent||'';
   var meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  var dd=new Date(); var ds=dd.getDate()+' '+meses[dd.getMonth()]+' '+dd.getFullYear();
-  var campos={'prt-titulo':titulo,'prt-versiculo':ver,'prt-ref':ref,'prt-reflexao':reflex,'prt-aplic':aplic,'prt-oracao':oracao,'prt-data':ds};
-  Object.keys(campos).forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=campos[id]; });
+  var dd=new Date(); var ds=dd.getDate()+' de '+meses[dd.getMonth()]+' de '+dd.getFullYear();
+
+  // Tentar com html2canvas primeiro
   var card=document.getElementById('devo-print');
-  if(!card){ alert('Nao foi possivel gerar.'); return; }
-  card.style.cssText='position:fixed;left:0;top:0;z-index:99999;width:380px';
-  var btn=document.querySelector('[onclick="compartilharDevo()"]');
-  if(btn){ btn.textContent='Gerando...'; btn.disabled=true; }
-  function restaurar(){ card.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;width:380px'; if(btn){ btn.textContent='Compartilhar como Imagem'; btn.disabled=false; } }
-  if(typeof html2canvas!=='undefined'){
+  if(card && typeof html2canvas !== 'undefined'){
+    // Preencher o card
+    var campos={'prt-titulo':titulo,'prt-versiculo':ver,'prt-ref':ref,'prt-reflexao':reflex,'prt-aplic':aplic,'prt-oracao':oracao,'prt-data':ds};
+    Object.keys(campos).forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=campos[id]; });
+    card.style.cssText='position:fixed;left:0px;top:0px;z-index:99999;width:380px;visibility:visible';
+    var btn=document.querySelector('[onclick="compartilharDevo()"]');
+    if(btn){ btn.innerHTML='&#9200; Gerando imagem...'; btn.disabled=true; }
+    function restaurar(){
+      card.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;width:380px';
+      if(btn){ btn.innerHTML='&#128247; Compartilhar como Imagem'; btn.disabled=false; }
+    }
     setTimeout(function(){
-      html2canvas(card,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false}).then(function(canvas){
+      html2canvas(card,{
+        scale:2, useCORS:true, allowTaint:true,
+        backgroundColor:'#0F4D3A', logging:false,
+        width:380, windowWidth:380
+      }).then(function(canvas){
         restaurar();
         canvas.toBlob(function(blob){
-          if(!blob){ alert('Erro ao gerar.'); return; }
+          if(!blob){ gerarImagemCanvas(titulo,ver,ref,reflex,aplic,oracao,ds); return; }
           var file=new File([blob],'devocional-ipf.png',{type:'image/png'});
           if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-            navigator.share({files:[file],title:'Devocional IPF',text:titulo}).catch(function(){ baixarImg(canvas); });
-          } else { baixarImg(canvas); }
+            navigator.share({files:[file],title:'Devocional IPF - '+titulo,text:ver+' - '+ref}).catch(function(){
+              baixarImg(canvas.toDataURL('image/png'));
+            });
+          } else {
+            baixarImg(canvas.toDataURL('image/png'));
+          }
         },'image/png');
-      }).catch(function(){
+      }).catch(function(err){
         restaurar();
-        var link='https://gustavocmotta22-cpu.github.io/filadelfia-conecta/';
-        if(navigator.share){ navigator.share({title:titulo,text:ver,url:link}); }
-        else{ window.open('https://wa.me/?text='+encodeURIComponent(titulo+'\n\n'+ver+'\n'+ref+'\n\n'+link),'_blank'); }
+        console.log('html2canvas falhou, usando canvas API:', err);
+        gerarImagemCanvas(titulo,ver,ref,reflex,aplic,oracao,ds);
       });
-    },300);
+    },400);
   } else {
-    restaurar();
-    var link='https://gustavocmotta22-cpu.github.io/filadelfia-conecta/';
-    if(navigator.share){ navigator.share({title:titulo,text:ver,url:link}); }
-    else{ window.open('https://wa.me/?text='+encodeURIComponent(titulo+'\n\n'+ver+'\n'+ref+'\n\n'+link),'_blank'); }
+    // Fallback: gerar imagem com Canvas API 2D
+    gerarImagemCanvas(titulo,ver,ref,reflex,aplic,oracao,ds);
   }
 }
-function baixarImg(canvas){ var url=canvas.toDataURL('image/png'); var a=document.createElement('a'); a.href=url; a.download='devocional-ipf.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+
+function gerarImagemCanvas(titulo,ver,ref,reflex,aplic,oracao,ds){
+  var btn=document.querySelector('[onclick="compartilharDevo()"]');
+  if(btn){ btn.innerHTML='&#9200; Gerando...'; btn.disabled=true; }
+  function restaurarBtn(){ if(btn){ btn.innerHTML='&#128247; Compartilhar como Imagem'; btn.disabled=false; } }
+
+  var W=800, H=1200;
+  var canvas=document.createElement('canvas');
+  canvas.width=W; canvas.height=H;
+  var ctx=canvas.getContext('2d');
+
+  // Fundo gradiente
+  var grad=ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#0F4D3A');
+  grad.addColorStop(0.5,'#1a6b50');
+  grad.addColorStop(1,'#2D7A5F');
+  ctx.fillStyle=grad;
+  ctx.roundRect(0,0,W,H,40);
+  ctx.fill();
+
+  // Função para quebrar texto
+  function wrapText(ctx,text,x,y,maxWidth,lineHeight){
+    var words=text.split(' '); var line='';
+    var lines=[];
+    for(var i=0;i<words.length;i++){
+      var testLine=line+words[i]+' ';
+      var metrics=ctx.measureText(testLine);
+      if(metrics.width>maxWidth&&i>0){ lines.push(line); line=words[i]+' '; }
+      else { line=testLine; }
+    }
+    lines.push(line);
+    for(var j=0;j<lines.length;j++){
+      ctx.fillText(lines[j],x,y+j*lineHeight);
+    }
+    return lines.length;
+  }
+
+  var yPos=60; var pad=60;
+
+  // Header IPF
+  ctx.fillStyle='rgba(255,255,255,0.15)';
+  ctx.roundRect(pad,yPos,W-pad*2,80,16);
+  ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.font='bold 22px Arial';
+  ctx.fillText('DEVOCIONAL DIARIO - IPF',pad+20,yPos+30);
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.font='18px Arial';
+  ctx.fillText('Igreja Presbiteriana Filadelfia - '+ds,pad+20,yPos+58);
+  yPos+=110;
+
+  // Título
+  ctx.fillStyle='#ffffff';
+  ctx.font='bold 38px Arial';
+  var tLines=wrapText(ctx,titulo,pad,yPos,W-pad*2,50);
+  yPos+=tLines*50+20;
+
+  // Versículo box
+  ctx.fillStyle='rgba(255,255,255,0.12)';
+  var verH=Math.min(180, (ver.length/40)*28+60);
+  ctx.roundRect(pad,yPos,W-pad*2,verH,16);
+  ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.95)';
+  ctx.font='italic 22px Arial';
+  wrapText(ctx,'"'+ver+'"',pad+20,yPos+35,W-pad*2-40,32);
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.font='bold 18px Arial';
+  ctx.fillText(ref,pad+20,yPos+verH-15);
+  yPos+=verH+30;
+
+  // Reflexão
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  var refH=Math.min(200, (reflex.length/50)*28+50);
+  ctx.roundRect(pad,yPos,W-pad*2,refH,16);
+  ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.7)';
+  ctx.font='bold 18px Arial';
+  ctx.fillText('REFLEXAO',pad+20,yPos+28);
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.font='20px Arial';
+  wrapText(ctx,reflex.substring(0,200),pad+20,yPos+55,W-pad*2-40,28);
+  yPos+=refH+20;
+
+  // Link
+  yPos=Math.max(yPos, H-100);
+  ctx.fillStyle='rgba(255,255,255,0.15)';
+  ctx.roundRect(pad,yPos,W-pad*2,60,12);
+  ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.font='bold 20px Arial';
+  ctx.textAlign='center';
+  ctx.fillText('Acesse o app: gustavocmotta22-cpu.github.io/filadelfia-conecta/',W/2,yPos+36);
+  ctx.textAlign='left';
+
+  // Compartilhar
+  canvas.toBlob(function(blob){
+    restaurarBtn();
+    if(!blob){ alert('Erro ao gerar imagem.'); return; }
+    var file=new File([blob],'devocional-ipf.png',{type:'image/png'});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:'Devocional IPF',text:titulo+' - '+ref}).catch(function(){
+        baixarImg(canvas.toDataURL('image/png'));
+      });
+    } else {
+      baixarImg(canvas.toDataURL('image/png'));
+    }
+  },'image/png');
+}
+
+
 
 function alog(){
   var e=document.getElementById('aem').value; var p=document.getElementById('apw').value; var ok=false;
