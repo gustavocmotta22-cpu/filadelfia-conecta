@@ -721,9 +721,7 @@ function wm_pular() {
 function enviarConselho() {
   var msg = document.getElementById('cons-msg').value.trim();
   if (!msg) { alert('Por favor, escreva sua mensagem antes de enviar.'); return; }
-  var enc = encodeURIComponent('Mensagem ao Conselho da IPF:
-
-' + msg);
+  var enc = encodeURIComponent('Mensagem ao Conselho da IPF: ' + msg);
   var membros = [
     {nome:'Pastor Rafael', num:'5521987361216'},
     {nome:'Presb. Ailson',  num:'5521991571376'},
