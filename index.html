@@ -542,15 +542,36 @@ textarea.fi{resize:none;height:100px}
 <div id="s-aniversariantes" class="screen">
   <div class="ph"><button onclick="back()" style="color:rgba(255,255,255,.9);font-size:24px;background:none;border:none;cursor:pointer;padding:4px;position:relative;z-index:10;flex-shrink:0">←</button><span class="ph-title">Aniversariantes</span></div>
   <div style="padding:16px">
-    <div class="card card-p" style="margin-bottom:16px;text-align:center"><div style="font-size:40px;margin-bottom:8px">🎂</div><div style="color:#0F4D3A;font-weight:800;font-size:17px;margin-bottom:6px">Aniversariantes de Junho</div><div style="color:#6B7280;font-size:14px;line-height:1.6">Parabenize os irmãos e irmãs com uma mensagem especial pelo WhatsApp!</div></div>
-    <div class="aniv-card"><div class="aniv-day"><div style="font-size:20px;font-weight:800;line-height:1">7</div><div style="font-size:9px;text-transform:uppercase">Jun</div></div><div style="flex:1"><div style="color:#0F4D3A;font-size:15px;font-weight:700">Exemplo — Seu Nome</div><div style="color:#9CA3AF;font-size:12px;margin-top:2px">Que Deus te abençoe grandemente!</div><a href="https://wa.me/?text=Feliz%20aniversario!%20Que%20Deus%20te%20abencoe.%20Com%20carinho,%20IPF%20Filadelfia" target="_blank" style="background:#25D366;color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:10px;display:inline-flex;align-items:center;gap:4px;margin-top:6px;text-decoration:none">💬 Parabenizar</a></div></div>
-    <div style="background:#0F4D3A;border-radius:18px;padding:18px;margin-top:8px">
+    <!-- Card título com botão atualizar -->
+    <div class="card cp" style="margin-bottom:16px;text-align:center">
+      <div style="font-size:40px;margin-bottom:8px">🎂</div>
+      <div id="aniv-mes-titulo" style="color:#0F4D3A;font-weight:800;font-size:17px;margin-bottom:6px">Aniversariantes do Mês</div>
+      <div style="color:#6B7280;font-size:14px;line-height:1.6;margin-bottom:10px">Parabenize os irmãos e irmãs com uma mensagem especial pelo WhatsApp!</div>
+      <button onclick="carregarAniversariantes()" style="background:#ECFDF5;color:#0F4D3A;border:1px solid rgba(15,77,58,.2);border-radius:12px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">🔄 Atualizar lista</button>
+    </div>
+    <!-- Lista dinâmica -->
+    <div id="aniv-lista" style="margin-bottom:16px"></div>
+    <!-- Formulário de cadastro -->
+    <div style="background:#0F4D3A;border-radius:18px;padding:18px">
       <div style="color:#fff;font-weight:700;font-size:15px;margin-bottom:4px">🎉 Cadastre seu Aniversário!</div>
-      <div style="color:rgba(255,255,255,.7);font-size:13px;margin-bottom:14px">Receba uma mensagem especial no seu dia!</div>
-      <input class="fi" id="aniv-nome" placeholder="Seu nome" style="margin-bottom:10px">
-      <input class="fi" id="aniv-data" type="date" style="margin-bottom:10px">
-      <input class="fi" id="aniv-zap" type="tel" placeholder="Seu WhatsApp (21 99999-9999)" style="margin-bottom:14px">
-      <button style="width:100%;background:#fff;color:#0F4D3A;font-weight:700;font-size:15px;padding:15px;border-radius:14px;cursor:pointer;border:none;font-family:'Inter',sans-serif" onclick="cadAniv()">Cadastrar Aniversário</button>
+      <div style="color:rgba(255,255,255,.7);font-size:13px;margin-bottom:16px">Receba parabéns da comunidade no seu dia!</div>
+      <!-- Foto opcional -->
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+        <div id="aniv-foto-preview" onclick="document.getElementById('aniv-foto-input').click()" style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.15);border:2px dashed rgba(255,255,255,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;overflow:hidden">
+          <span style="font-size:24px">📷</span>
+          <span style="color:rgba(255,255,255,.75);font-size:9px;margin-top:2px">Foto</span>
+        </div>
+        <div style="flex:1">
+          <div style="color:#fff;font-size:13px;font-weight:600;margin-bottom:3px">Foto (opcional)</div>
+          <div style="color:rgba(255,255,255,.6);font-size:12px;line-height:1.5">Sua foto aparecerá junto ao seu nome na lista</div>
+          <button type="button" onclick="document.getElementById('aniv-foto-input').click()" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;margin-top:6px;font-family:'Inter',sans-serif">+ Escolher foto</button>
+        </div>
+      </div>
+      <input type="file" id="aniv-foto-input" accept="image/*" style="display:none" onchange="previewAnivFoto(this)">
+      <input class="fi" id="aniv-nome" placeholder="Seu nome completo" style="margin-bottom:10px;background:#fff">
+      <input class="fi" id="aniv-data" type="date" style="margin-bottom:10px;background:#fff">
+      <input class="fi" id="aniv-zap" type="tel" placeholder="Seu WhatsApp (21 99999-9999)" style="margin-bottom:14px;background:#fff">
+      <button onclick="cadAniv()" style="width:100%;background:#fff;color:#0F4D3A;font-weight:700;font-size:15px;padding:15px;border-radius:14px;cursor:pointer;border:none;font-family:'Inter',sans-serif">🎉 Cadastrar Aniversário</button>
     </div>
   </div>
 </div>
