@@ -145,6 +145,18 @@ textarea.fi{resize:none;height:100px}
 
 @keyframes su{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* BANNER INSTALAR APP */
+#install-banner{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:9998;background:#fff;border-top:1px solid #E5E7EB;padding:14px 16px;display:none;align-items:center;gap:12px;box-shadow:0 -8px 30px rgba(0,0,0,.12);animation:slideUp .4s ease}
+#install-banner.show{display:flex}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(100%)}to{transform:translateX(-50%) translateY(0)}}
+.ib-logo{width:52px;height:52px;border-radius:14px;flex-shrink:0;overflow:hidden}
+.ib-logo img{width:100%;height:100%;object-fit:cover}
+.ib-text{flex:1}
+.ib-title{color:#0F4D3A;font-weight:700;font-size:14px}
+.ib-sub{color:#9CA3AF;font-size:12px;margin-top:2px}
+.ib-btn{background:#0F4D3A;color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0}
+.ib-close{color:#D1D5DB;font-size:20px;cursor:pointer;padding:4px;background:none;border:none;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -168,6 +180,18 @@ textarea.fi{resize:none;height:100px}
   </div>
 </div>
 <div id="app">
+
+<!-- BANNER INSTALAR APP -->
+<div id="install-banner">
+  <div class="ib-logo"><img src="icon-192.png" alt="IPF"></div>
+  <div class="ib-text">
+    <div class="ib-title">Adicionar à Tela Inicial</div>
+    <div class="ib-sub">Acesse a IPF como um app nativo!</div>
+  </div>
+  <button class="ib-btn" onclick="installApp()">Instalar</button>
+  <button class="ib-close" onclick="fecharBanner()">✕</button>
+</div>
+
 <div id="s-home" class="screen active">
   <div class="hh">
     <div class="hh-top">
@@ -915,6 +939,63 @@ function cpix() {
   } catch(e) {
     alert('PIX: ' + k);
   }
+}
+
+
+// ── PWA INSTALL PROMPT ────────────────────────────────────────────────────
+var deferredPrompt = null;
+
+// Registrar Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/filadelfia-conecta/sw.js').then(function(reg) {
+      console.log('SW registrado:', reg.scope);
+    }).catch(function(err) {
+      console.log('SW erro:', err);
+    });
+  });
+}
+
+// Capturar evento de instalação
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Mostrar banner após 3 segundos se não foi instalado
+  try {
+    if (!localStorage.getItem('app_installed')) {
+      setTimeout(function() {
+        var banner = document.getElementById('install-banner');
+        if (banner) banner.classList.add('show');
+      }, 3000);
+    }
+  } catch(ex) {}
+});
+
+// Detectar quando foi instalado
+window.addEventListener('appinstalled', function() {
+  try { localStorage.setItem('app_installed', '1'); } catch(e) {}
+  fecharBanner();
+});
+
+function installApp() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(result) {
+      if (result.outcome === 'accepted') {
+        try { localStorage.setItem('app_installed', '1'); } catch(e) {}
+        fecharBanner();
+      }
+      deferredPrompt = null;
+    });
+  } else {
+    // iOS — mostrar instrução manual
+    alert('Para instalar no iPhone:\n1. Toque no botão de Compartilhar (quadrado com seta)\n2. Role para baixo e toque em "Adicionar à Tela de Início"\n3. Toque em "Adicionar"');
+  }
+}
+
+function fecharBanner() {
+  var b = document.getElementById('install-banner');
+  if (b) b.classList.remove('show');
 }
 
 </script>
