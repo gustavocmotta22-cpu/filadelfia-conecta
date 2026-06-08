@@ -1,32 +1,31 @@
-const CACHE = 'ipf-v4';
-const ASSETS = [
-  '/filadelfia-conecta/',
-  '/filadelfia-conecta/index.html',
-  '/filadelfia-conecta/manifest.json',
-  '/filadelfia-conecta/icon-192.png',
-  '/filadelfia-conecta/icon-512.png'
-];
+// Service Worker — sem cache, sempre busca rede
+const CACHE_NAME = 'ipf-v5-nocache';
 
 self.addEventListener('install', function(e) {
-  e.waitUntil(
-    caches.open(CACHE).then(function(c) { return c.addAll(ASSETS); })
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
-      return Promise.all(keys.filter(function(k){ return k !== CACHE; }).map(function(k){ return caches.delete(k); }));
+      return Promise.all(keys.map(function(key) {
+        console.log('SW: deletando cache', key);
+        return caches.delete(key);
+      }));
+    }).then(function() {
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
 });
 
+// Sempre busca da rede, sem cache
 self.addEventListener('fetch', function(e) {
   e.respondWith(
-    caches.match(e.request).then(function(cached) {
-      return cached || fetch(e.request).catch(function(){ return caches.match('/filadelfia-conecta/index.html'); });
+    fetch(e.request.clone()).catch(function() {
+      return new Response('Offline - reabra quando tiver conexao', {
+        status: 503,
+        headers: {'Content-Type': 'text/plain; charset=utf-8'}
+      });
     })
   );
 });
