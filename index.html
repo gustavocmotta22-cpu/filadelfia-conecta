@@ -46,7 +46,7 @@ input,textarea{font-family:inherit}
 .wm-btn{width:100%;background:#0F4D3A;color:#fff;font-weight:700;font-size:15px;padding:15px;border-radius:14px;box-shadow:0 8px 24px rgba(15,77,58,.3);margin-bottom:10px;cursor:pointer;border:none;font-family:'Inter',sans-serif}
 .wm-skip{width:100%;color:#9CA3AF;font-size:13px;padding:8px;text-align:center;cursor:pointer;border:none;background:none;font-family:'Inter',sans-serif}
 
-#app{display:none}
+#app{display:block}
 .screen{display:none;min-height:100vh;padding-bottom:80px}
 .screen.active{display:block;animation:su .3s ease}
 
@@ -146,8 +146,8 @@ textarea.fi{resize:none;height:100px}
 @keyframes su{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.4}}
 
-#splash { animation: splashOut 0.5s ease 2.5s forwards; }
-@keyframes splashOut { to { opacity: 0; pointer-events: none; } }
+
+
 
 /* BOTÃO FLUTUANTE WHATSAPP */
 #wpp-fab{
@@ -232,7 +232,7 @@ textarea.fi{resize:none;height:100px}
 <div id="app">
 
 <!-- BOTÃO FLUTUANTE WHATSAPP -->
-<button id="wpp-fab" onclick="abrirWppModal()" id="wpp-fab-btn">
+<button id="wpp-fab" onclick="abrirWppModal()">
   <span class="wpp-icon">📲</span>
   <div class="wpp-txt">Receber avisos<span>pelo WhatsApp</span></div>
 </button>
@@ -760,6 +760,9 @@ function initApp() {
       sp.style.transition = 'opacity 0.5s';
       setTimeout(function() { sp.style.display = 'none'; }, 500);
     }
+    // Garantir que a home está ativa
+    var home = document.getElementById('s-home');
+    if (home) home.classList.add('active');
     var saved = localStorage.getItem('adm');
     if (saved) { adm = JSON.parse(saved); aupd(); }
     var wppJoined = localStorage.getItem('wpp_joined');
