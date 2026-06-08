@@ -744,81 +744,106 @@ textarea.fi{resize:none;height:100px}
   <div class="bi" id="bi-mais" onclick="tab('mais')"><div class="bi-icon">☰</div><div class="bi-label">Mais</div></div>
 </nav>
 </div>
+
 <script>
-var cs='home', hist=[], adm=null;
-var TABS=['home','cultos','comunidade','literaturas','mais'];
-var ADMIN=['admin-login','admin-dashboard'];
+var cs = 'home';
+var hist = [];
+var adm = null;
+var TABS = ['home','cultos','comunidade','literaturas','mais'];
+var ADMIN = ['admin-login','admin-dashboard'];
 
 function initApp() {
-  // Verificar se já entrou no grupo e ocultar FAB
   try {
-    if (localStorage.getItem('wpp_joined')) {
+    var sp = document.getElementById('splash');
+    if (sp) {
+      sp.style.opacity = '0';
+      sp.style.transition = 'opacity 0.5s';
+      setTimeout(function() { sp.style.display = 'none'; }, 500);
+    }
+    var saved = localStorage.getItem('adm');
+    if (saved) { adm = JSON.parse(saved); aupd(); }
+    var wppJoined = localStorage.getItem('wpp_joined');
+    if (wppJoined) {
       var fab = document.getElementById('wpp-fab');
       if (fab) fab.style.display = 'none';
     }
-  } catch(e) {}
-  try {
-    var sp = document.getElementById('splash');
-    if (sp) { sp.style.opacity='0'; sp.style.transition='opacity 0.5s'; setTimeout(function(){ sp.style.display='none'; }, 500); }
     var d = new Date();
     var el = document.getElementById('ddate');
     if (el) el.textContent = d.toLocaleDateString('pt-BR');
-    var saved = localStorage.getItem('adm');
-    if (saved) { adm = JSON.parse(saved); aupd(); }
-    var wm = localStorage.getItem('wm_done');
-    if (!wm) { setTimeout(function() { var m=document.getElementById('welcome-modal'); if(m) m.classList.add('show'); }, 800); }
-  } catch(e) { console.log('initApp error:', e); }
+  } catch(e) {}
 }
-setTimeout(initApp, 2200);
+
+setTimeout(initApp, 2000);
 
 function act(n) {
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
   var t = document.getElementById('s-' + n);
   if (t) { t.classList.add('active'); t.scrollTop = 0; window.scrollTo(0,0); cs = n; }
-  document.getElementById('bnav').style.display = ADMIN.indexOf(n) >= 0 ? 'none' : 'flex';
+  var bnav = document.getElementById('bnav');
   var fab = document.getElementById('wpp-fab');
-  if (fab) { fab.style.display = ADMIN.indexOf(n) >= 0 ? 'none' : (localStorage.getItem('wpp_joined') ? 'none' : 'flex'); }
+  var isAdmin = ADMIN.indexOf(n) >= 0;
+  if (bnav) bnav.style.display = isAdmin ? 'none' : 'flex';
+  if (fab) fab.style.display = isAdmin ? 'none' : (localStorage.getItem('wpp_joined') ? 'none' : 'flex');
 }
+
 function go(n) { hist.push(cs); act(n); }
+
 function tab(n) {
-  hist = []; act(n);
-  document.querySelectorAll('.bi').forEach(function(b) { b.classList.remove('active'); var d = b.querySelector('.bi-dot'); if (d) d.style.display = 'none'; });
+  hist = [];
+  act(n);
+  var bis = document.querySelectorAll('.bi');
+  for (var i = 0; i < bis.length; i++) {
+    bis[i].classList.remove('active');
+    var dot = bis[i].querySelector('.bi-dot');
+    if (dot) dot.style.display = 'none';
+  }
   var ab = document.getElementById('bi-' + n);
-  if (ab) { ab.classList.add('active'); var d = ab.querySelector('.bi-dot'); if (d) d.style.display = 'block'; }
+  if (ab) {
+    ab.classList.add('active');
+    var dot = ab.querySelector('.bi-dot');
+    if (dot) dot.style.display = 'block';
+  }
 }
+
 function back() {
   if (hist.length > 0) {
-    var p = hist.pop(); act(p);
+    var p = hist.pop();
+    act(p);
     if (TABS.indexOf(p) >= 0) {
-      document.querySelectorAll('.bi').forEach(function(b) { b.classList.remove('active'); });
-      var el = document.getElementById('bi-' + p); if (el) el.classList.add('active');
+      var bis = document.querySelectorAll('.bi');
+      for (var i = 0; i < bis.length; i++) bis[i].classList.remove('active');
+      var el = document.getElementById('bi-' + p);
+      if (el) el.classList.add('active');
     }
   } else { tab('home'); }
 }
 
-function wm_aceitar() {
-  var nome = document.getElementById('wm-nome').value.trim();
-  var zap = document.getElementById('wm-zap').value.trim();
-  if (!nome) { alert('Por favor, informe seu nome.'); return; }
-  try { localStorage.setItem('wm_done','1'); localStorage.setItem('wm_nome', nome); if (zap) localStorage.setItem('wm_zap', zap); } catch(e) {}
-  document.getElementById('welcome-modal').classList.remove('show');
-  if (zap) {
-    var msg = 'Ola! Me cadastrei no Filadelfia Conecta.%0ANome: ' + encodeURIComponent(nome) + '%0AWhatsApp: ' + encodeURIComponent(zap);
-    window.open('https://wa.me/5521987361216?text=' + msg, '_blank');
-  }
+function abrirWppModal() {
+  var m = document.getElementById('wpp-modal');
+  if (m) m.classList.add('show');
 }
-function wm_pular() {
-  try { localStorage.setItem('wm_done','1'); } catch(e) {}
-  document.getElementById('welcome-modal').classList.remove('show');
+
+function fecharWppModal() {
+  var m = document.getElementById('wpp-modal');
+  if (m) m.classList.remove('show');
+}
+
+function wppEntrou() {
+  try { localStorage.setItem('wpp_joined','1'); } catch(e) {}
+  fecharWppModal();
+  var fab = document.getElementById('wpp-fab');
+  if (fab) fab.style.display = 'none';
 }
 
 function enviarConselho() {
   var msg = document.getElementById('cons-msg').value.trim();
   if (!msg) { alert('Por favor, escreva sua mensagem antes de enviar.'); return; }
-  var enc = encodeURIComponent('Mensagem ao Conselho da IPF: ' + msg);
+  var texto = 'Mensagem ao Conselho da IPF: ' + msg;
+  var enc = encodeURIComponent(texto);
   var membros = [
     {nome:'Pastor Rafael', num:'5521987361216'},
-    {nome:'Presb. Ailson',  num:'5521991571376'},
+    {nome:'Presb. Ailson', num:'5521991571376'},
     {nome:'Presb. Osvaldo', num:'5521998461235'},
     {nome:'Presb. Gustavo', num:'5521989290880'}
   ];
@@ -839,12 +864,12 @@ function enviarConselho() {
 
 function cadAniv() {
   var n = document.getElementById('aniv-nome').value.trim();
-  var d = document.getElementById('aniv-data').value;
+  var dt = document.getElementById('aniv-data').value;
   var z = document.getElementById('aniv-zap').value.trim();
-  if (!n || !d) { alert('Preencha nome e data.'); return; }
+  if (!n || !dt) { alert('Preencha nome e data.'); return; }
   try {
     var list = JSON.parse(localStorage.getItem('anivs') || '[]');
-    list.push({nome:n, data:d, zap:z});
+    list.push({nome:n, data:dt, zap:z});
     localStorage.setItem('anivs', JSON.stringify(list));
   } catch(e) {}
   alert('Cadastro realizado! Voce recebera parabens no seu dia!');
@@ -855,17 +880,18 @@ function cadAniv() {
 
 function sdevo() {
   if (navigator.share) {
-    navigator.share({title:'Devocional - IPF', text:'Confie no Senhor de todo o seu coracao. Pv 3:5', url:window.location.href});
+    navigator.share({title:'Devocional IPF', text:'Confie no Senhor de todo o seu coracao. Pv 3:5', url:window.location.href});
   } else {
-    navigator.clipboard && navigator.clipboard.writeText('Confie no Senhor de todo o seu coracao. Pv 3:5');
+    try { navigator.clipboard.writeText('Confie no Senhor de todo o seu coracao. Pv 3:5'); } catch(e) {}
     alert('Versiculo copiado!');
   }
 }
+
 function cpix() {
   var k = 'filadelfia@ipf.org.br';
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(k).then(function() { alert('Chave PIX copiada! ' + k); });
-  } else { alert('PIX: ' + k); }
+  try {
+    navigator.clipboard.writeText(k).then(function() { alert('Chave PIX copiada: ' + k); });
+  } catch(e) { alert('PIX: ' + k); }
 }
 
 function alog() {
@@ -888,32 +914,21 @@ function alog() {
     document.getElementById('aerr').style.display = 'block';
   }
 }
+
 function aupd() {
   if (!adm) return;
-  var gn = document.getElementById('agn'); if (gn) gn.textContent = 'Ola, ' + adm.fn + '!';
-  var aft = document.getElementById('aft'); if (aft) aft.textContent = adm.full;
-  var ar = document.getElementById('arole'); if (ar) ar.textContent = adm.role === 'MASTER' ? 'Master' : 'Pastor';
+  var gn = document.getElementById('agn');
+  var aft = document.getElementById('aft');
+  var ar = document.getElementById('arole');
+  if (gn) gn.textContent = 'Ola, ' + adm.fn + '!';
+  if (aft) aft.textContent = adm.full;
+  if (ar) ar.textContent = adm.role === 'MASTER' ? 'Master' : 'Pastor';
 }
+
 function aout() {
   adm = null;
   try { localStorage.removeItem('adm'); } catch(e) {}
   tab('home');
-}
-
-function abrirWppModal() {
-  var m = document.getElementById('wpp-modal');
-  if (m) m.classList.add('show');
-}
-function fecharWppModal() {
-  var m = document.getElementById('wpp-modal');
-  if (m) m.classList.remove('show');
-}
-function wppEntrou() {
-  try { localStorage.setItem('wpp_joined','1'); } catch(e) {}
-  fecharWppModal();
-  // Ocultar o botão flutuante após entrar
-  var fab = document.getElementById('wpp-fab');
-  if (fab) fab.style.display = 'none';
 }
 </script>
 </body>
