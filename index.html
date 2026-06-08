@@ -714,279 +714,362 @@ textarea.fi{resize:none;height:100px}
 <script>
 var cs='home', hist=[], adm=null;
 var TABS=['home','cultos','comunidade','literaturas','mais'];
-var ADMIN=['admin-login','admin-dashboard'];
+var ADMIN=['admin-login','admin-dashboard','admin-devocionais','admin-agenda','admin-liturgia','admin-aniversariantes','admin-literaturas','admin-avisos'];
+var editDevoId=null, anivFotoB64='';
 
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    var sp = document.getElementById('splash');
-    sp.classList.add('hide');
-    setTimeout(function() {
-      sp.style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      var d = new Date();
-      var el = document.getElementById('ddate');
-      if (el) el.textContent = d.toLocaleDateString('pt-BR', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
-      try {
-        var saved = localStorage.getItem('adm');
-        if (saved) { adm = JSON.parse(saved); aupd(); }
-        var wm = localStorage.getItem('wm_done');
-        if (!wm) {
-          setTimeout(function() {
-            document.getElementById('welcome-modal').classList.add('show');
-          }, 1500);
-        }
-  }, 2600);
+firebase.initializeApp({
+  apiKey:"AIzaSyAz8bWXxXmAmowcTRc_jOLclEB4LMIPEmQ",
+  authDomain:"filadelfia-conecta.firebaseapp.com",
+  projectId:"filadelfia-conecta",
+  storageBucket:"filadelfia-conecta.firebasestorage.app",
+  messagingSenderId:"805912319328",
+  appId:"1:805912319328:web:7a1401be7e60c53a413a05"
+});
+var db = firebase.firestore();
 
-function act(n) {
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-  var t = document.getElementById('s-' + n);
-  if (t) { t.classList.add('active'); t.scrollTop = 0; window.scrollTo(0,0); cs = n; }
-  document.getElementById('bnav').style.display = ADMIN.indexOf(n) >= 0 ? 'none' : 'flex';
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/filadelfia-conecta/sw.js').catch(function(){});
+  });
 }
-function go(n) { hist.push(cs); act(n); }
-function tab(n) {
-  hist = []; act(n);
-  document.querySelectorAll('.bi').forEach(function(b) { b.classList.remove('active'); var d = b.querySelector('.bi-dot'); if (d) d.style.display = 'none'; });
-  var ab = document.getElementById('bi-' + n);
-  if (ab) { ab.classList.add('active'); var d = ab.querySelector('.bi-dot'); if (d) d.style.display = 'block'; }
-}
-function back() {
-  if (hist.length > 0) {
-    var p = hist.pop(); act(p);
-    if (TABS.indexOf(p) >= 0) {
-      document.querySelectorAll('.bi').forEach(function(b) { b.classList.remove('active'); });
-      var el = document.getElementById('bi-' + p); if (el) el.classList.add('active');
-    }
-  } else { tab('home'); }
-}
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault(); window._deferredPrompt=e;
+  try{ if(!localStorage.getItem('app_installed')){ setTimeout(function(){ var b=document.getElementById('install-banner'); if(b) b.classList.add('show'); },4000); } }catch(ex){}
+});
+window.addEventListener('appinstalled',function(){
+  try{localStorage.setItem('app_installed','1');}catch(e){}
+  var b=document.getElementById('install-banner'); if(b) b.classList.remove('show');
+});
 
-function wm_aceitar() {
-  var nome = document.getElementById('wm-nome').value.trim();
-  var zap = document.getElementById('wm-zap').value.trim();
-  if (!nome) { alert('Por favor, informe seu nome.'); return; }
-  try { localStorage.setItem('wm_done','1'); localStorage.setItem('wm_nome', nome); if (zap) localStorage.setItem('wm_zap', zap); } catch(e) {}
-  document.getElementById('welcome-modal').classList.remove('show');
-  if (zap) {
-    var msg = 'Ola! Me cadastrei no Filadelfia Conecta.%0ANome: ' + encodeURIComponent(nome) + '%0AWhatsApp: ' + encodeURIComponent(zap);
-    window.open('https://wa.me/5521987361216?text=' + msg, '_blank');
-  }
+function installApp(){
+  if(window._deferredPrompt){
+    window._deferredPrompt.prompt();
+    window._deferredPrompt.userChoice.then(function(r){ if(r.outcome==='accepted'){ try{localStorage.setItem('app_installed','1');}catch(e){} } window._deferredPrompt=null; });
+  } else { alert('No iPhone: compartilhar > Adicionar a Tela Inicial'); }
 }
-function wm_pular() {
-  try { localStorage.setItem('wm_done','1'); } catch(e) {}
-  document.getElementById('welcome-modal').classList.remove('show');
-}
+function fecharBanner(){ var b=document.getElementById('install-banner'); if(b) b.classList.remove('show'); }
 
-function enviarConselho() {
-  var msg = document.getElementById('cons-msg').value.trim();
-  if (!msg) { alert('Por favor, escreva sua mensagem antes de enviar.'); return; }
-  var enc = encodeURIComponent('Mensagem ao Conselho: ' + msg);
-  var membros = [
-    {nome:'Pastor Rafael', num:'5521987361216'},
-    {nome:'Presb. Ailson',  num:'5521991571376'},
-    {nome:'Presb. Osvaldo', num:'5521998461235'},
-    {nome:'Presb. Gustavo', num:'5521989290880'}
-  ];
-  var i = 0;
-  function abrirProximo() {
-    if (i < membros.length) {
-      if (confirm('Enviar para ' + membros[i].nome + '?')) {
-        window.open('https://wa.me/' + membros[i].num + '?text=' + enc, '_blank');
-      }
-      i++;
-      setTimeout(abrirProximo, 800);
-    } else {
-      alert('Mensagem enviada para o Conselho!');
-    }
-  }
-  abrirProximo();
+function initApp(){
+  var sp=document.getElementById('splash');
+  if(sp){ sp.style.opacity='0'; sp.style.transition='opacity 0.5s'; setTimeout(function(){ sp.style.display='none'; },500); }
+  try{ var d=new Date(); var el=document.getElementById('ddate'); if(el) el.textContent=d.toLocaleDateString('pt-BR'); }catch(e){}
+  try{ var sv=localStorage.getItem('adm'); if(sv){ adm=JSON.parse(sv); aupd(); } }catch(e){}
+  try{ if(!localStorage.getItem('wpp_joined')){ setTimeout(function(){ var m=document.getElementById('wmodal'); if(m) m.classList.add('show'); },5000); } }catch(e){}
+  if(typeof carregarDevocionalDia==='function') carregarDevocionalDia();
+  if(typeof carregarAniversariantes==='function') carregarAniversariantes();
+}
+setTimeout(initApp,1500);
+
+function act(n){
+  var ss=document.querySelectorAll('.screen');
+  for(var i=0;i<ss.length;i++) ss[i].classList.remove('active');
+  var t=document.getElementById('s-'+n);
+  if(t){ t.classList.add('active'); t.scrollTop=0; window.scrollTo(0,0); cs=n; }
+  var isAdm=ADMIN.indexOf(n)>=0;
+  var bn=document.getElementById('bnav'); if(bn) bn.style.display=isAdm?'none':'flex';
+  var wf=document.getElementById('wfab'); if(wf) wf.style.display=isAdm?'none':(localStorage.getItem('wpp_joined')?'none':'flex');
+  if(n==='admin-devocionais') admDevoCarregar();
+  if(n==='admin-agenda') admAgendaCarregar();
+  if(n==='admin-liturgia') admLiturgiaCarregar();
+  if(n==='admin-aniversariantes') admAnivCarregar();
+  if(n==='admin-literaturas') admLitCarregar();
+  if(n==='admin-avisos') admAvisosCarregar();
+}
+function go(n){ hist.push(cs); act(n); }
+function tab(n){
+  hist=[]; act(n);
+  var bs=document.querySelectorAll('.bi');
+  for(var i=0;i<bs.length;i++){ bs[i].classList.remove('on'); var dd=bs[i].querySelector('.bi-dot'); if(dd) dd.style.display='none'; }
+  var ab=document.getElementById('bi-'+n);
+  if(ab){ ab.classList.add('on'); var dd=ab.querySelector('.bi-dot'); if(dd) dd.style.display='block'; }
+}
+function back(){
+  if(hist.length>0){ var p=hist.pop(); act(p); if(TABS.indexOf(p)>=0){ var bs=document.querySelectorAll('.bi'); for(var i=0;i<bs.length;i++) bs[i].classList.remove('on'); var e=document.getElementById('bi-'+p); if(e) e.classList.add('on'); } }
+  else tab('home');
 }
 
-function cadAniv() {
-  var n = document.getElementById('aniv-nome').value.trim();
-  var d = document.getElementById('aniv-data').value;
-  var z = document.getElementById('aniv-zap').value.trim();
-  if (!n || !d) { alert('Preencha nome e data.'); return; }
-  try {
-    var list = JSON.parse(localStorage.getItem('anivs') || '[]');
-    list.push({nome:n, data:d, zap:z});
-    localStorage.setItem('anivs', JSON.stringify(list));
-  alert('Cadastro realizado! Voce recebera parabens no seu dia!');
-  document.getElementById('aniv-nome').value = '';
-  document.getElementById('aniv-data').value = '';
-  document.getElementById('aniv-zap').value = '';
+function abrirWpp(){ var m=document.getElementById('wmodal'); if(m) m.classList.add('show'); }
+function fecharWpp(){ var m=document.getElementById('wmodal'); if(m) m.classList.remove('show'); }
+function wppJoin(){ try{localStorage.setItem('wpp_joined','1');}catch(e){} fecharWpp(); var f=document.getElementById('wfab'); if(f) f.style.display='none'; }
+
+function envConselho(){
+  var msg=document.getElementById('cons-msg').value.trim();
+  if(!msg){ alert('Escreva sua mensagem antes de enviar.'); return; }
+  var enc=encodeURIComponent('Mensagem ao Conselho da IPF: '+msg);
+  var m=[{n:'Pastor Rafael',v:'5521987361216'},{n:'Presb. Ailson',v:'5521991571376'},{n:'Presb. Osvaldo',v:'5521998461235'},{n:'Presb. Gustavo',v:'5521989290880'}];
+  var i=0;
+  function prox(){ if(i<m.length){ if(confirm('Enviar para '+m[i].n+'?')) window.open('https://wa.me/'+m[i].v+'?text='+enc,'_blank'); i++; setTimeout(prox,800); } else alert('Mensagem enviada!'); }
+  prox();
 }
 
-function sdevo() {
-  if (navigator.share) {
-    navigator.share({title:'Devocional - IPF', text:'Confie no Senhor de todo o seu coracao. Pv 3:5', url:window.location.href});
-  } else {
-    navigator.clipboard && navigator.clipboard.writeText('Confie no Senhor de todo o seu coracao. Pv 3:5');
-    alert('Versiculo copiado!');
-  }
-}
-function cpix() {
-  var k = '+55 21 96728-0849';
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(k).then(function() { alert('Chave PIX copiada! ' + k); });
-  } else { alert('PIX: ' + k); }
-}
-
-function alog() {
-  var e = document.getElementById('aem').value;
-  var p = document.getElementById('apw').value;
-  var ok = false;
-  if (e === 'admin@filadelfia.app' && p === 'FiladelfiaCristo2026!') {
-    adm = {uid:'1', fn:'Administrador', ln:'Master', email:e, role:'MASTER', full:'ADM Administrador Master'};
-    ok = true;
-  } else if (e === 'pastor@filadelfia.app' && p === 'Pastor@Filadelfia2026') {
-    adm = {uid:'2', fn:'Pastor Rafael', ln:'Ribeiro', email:e, role:'PASTOR', full:'ADM Pastor Rafael Ribeiro'};
-    ok = true;
-  }
-  if (ok) {
-    try { localStorage.setItem('adm', JSON.stringify(adm)); } catch(ex) {}
-    document.getElementById('aerr').style.display = 'none';
-    aupd();
-    go('admin-dashboard');
-  } else {
-    document.getElementById('aerr').style.display = 'block';
-  }
-}
-function aupd() {
-  if (!adm) return;
-  var gn = document.getElementById('agn'); if (gn) gn.textContent = 'Ola, ' + adm.fn + '!';
-  var aft = document.getElementById('aft'); if (aft) aft.textContent = adm.full;
-  var ar = document.getElementById('arole'); if (ar) ar.textContent = adm.role === 'MASTER' ? 'Master' : 'Pastor';
-}
-function aout() {
-  adm = null;
-  try { localStorage.removeItem('adm'); } catch(e) {}
-  tab('home');
-}
-
-// ── ORAÇÃO → Firebase ────────────────────────────────────────────────────
-function enviarOracao() {
-  var nome = document.getElementById('or-nome') ? document.getElementById('or-nome').value.trim() : '';
-  var pedido = document.getElementById('or-ped') ? document.getElementById('or-ped').value.trim() : '';
-  if (!pedido) { alert('Por favor, escreva seu pedido.'); return; }
-  db.collection('oracoes').add({
-    nome: nome || 'Anonimo',
-    pedido: pedido,
-    data: new Date().toISOString(),
-    lido: false
-  }).then(function() {
+function enviarOracao(){
+  var nome=document.getElementById('or-nome')?document.getElementById('or-nome').value.trim():'';
+  var pedido=document.getElementById('or-ped')?document.getElementById('or-ped').value.trim():'';
+  if(!pedido){ alert('Por favor, escreva seu pedido.'); return; }
+  db.collection('oracoes').add({nome:nome||'Anonimo',pedido:pedido,data:new Date().toISOString(),lido:false}).then(function(){
     alert('Pedido enviado! Estaremos orando por voce.');
-    if (document.getElementById('or-nome')) document.getElementById('or-nome').value = '';
-    if (document.getElementById('or-ped')) document.getElementById('or-ped').value = '';
-  }).catch(function() {
-    alert('Pedido enviado! Estaremos orando por voce.');
+    if(document.getElementById('or-nome')) document.getElementById('or-nome').value='';
+    if(document.getElementById('or-ped')) document.getElementById('or-ped').value='';
+  }).catch(function(){ alert('Pedido enviado! Estaremos orando por voce.'); });
 }
 
-// ── EBF → WhatsApp Irmã Joyce ─────────────────────────────────────────
-function inscricaoEBF() {
-  var nome = prompt('Nome da criança:');
-  if (!nome) return;
-  var idade = prompt('Idade da criança:');
-  if (!idade) return;
-  var sexo = prompt('Sexo (Masculino / Feminino):');
-  if (!sexo) return;
-  var msg = 'Inscricao EBF 2026%0A%0A'
-    + 'Nome: ' + encodeURIComponent(nome) + '%0A'
-    + 'Idade: ' + encodeURIComponent(idade) + ' anos%0A'
-    + 'Sexo: ' + encodeURIComponent(sexo) + '%0A%0A'
-    + 'Aguardo confirmacao. Obrigado!';
-  window.open('https://wa.me/5521986516710?text=' + msg, '_blank');
+function inscricaoEBF(){
+  var nome=prompt('Nome da crianca:'); if(!nome) return;
+  var idade=prompt('Idade da crianca:'); if(!idade) return;
+  var sexo=prompt('Sexo (Masculino / Feminino):'); if(!sexo) return;
+  var msg='Inscricao EBF 2026%0A%0ANome: '+encodeURIComponent(nome)+'%0AIdade: '+encodeURIComponent(idade)+' anos%0ASexo: '+encodeURIComponent(sexo)+'%0A%0AAguardo confirmacao!';
+  window.open('https://wa.me/5521986516710?text='+msg,'_blank');
 }
 
-// ── PIX / CONTRIBUIÇÕES ───────────────────────────────────────────────
-function abrirPix() { go('contrib'); }
+function abrirPix(){ go('contrib'); }
+function pixDizimo(){ cpix(); setTimeout(function(){ alert('Chave PIX copiada!\n\nAo transferir coloque na mensagem: DIZIMO'); },500); }
+function pixOferta(){ cpix(); setTimeout(function(){ alert('Chave PIX copiada!\n\nAo transferir coloque na mensagem: OFERTA GERAL'); },500); }
+function pixOfertaDirigida(){ var dest=prompt('Para onde e a oferta? (Ex: Missoes, EBF, Obras)'); if(!dest) return; cpix(); setTimeout(function(){ alert('Chave PIX copiada!\n\nAo transferir coloque: OFERTA - '+dest.toUpperCase()); },500); }
+function cpix(){ var k='+5521967280849'; try{ navigator.clipboard.writeText(k).then(function(){ alert('Chave PIX copiada: '+k); }); }catch(e){ alert('PIX: '+k); } }
 
-function pixDizimo() {
-  var chave = '+5521967280849';
-  var msg = 'Dizimo%20-%20Igreja%20Presbiteriana%20Filadelfia';
-  cpix();
-  setTimeout(function() {
-    alert('Chave PIX copiada! Ao transferir, coloque na mensagem: DIZIMO'); }, 500);
-
+function previewAnivFoto(input){
+  if(!input.files||!input.files[0]) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    anivFotoB64=e.target.result;
+    var prev=document.getElementById('aniv-foto-preview');
+    if(prev) prev.innerHTML='<img src="'+anivFotoB64+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  };
+  reader.readAsDataURL(input.files[0]);
 }
 
-function pixOferta() {
-  cpix();
-  setTimeout(function() {
-    alert('Chave PIX copiada! Ao transferir, coloque na mensagem: OFERTA GERAL'); }, 500);
-
+function cadAniv(){
+  var n=document.getElementById('aniv-nome').value.trim();
+  var dt=document.getElementById('aniv-data').value;
+  var z=document.getElementById('aniv-zap').value.trim();
+  if(!n||!dt){ alert('Preencha nome e data.'); return; }
+  var payload={nome:n,data:dt,zap:z,fonte:'auto'};
+  if(anivFotoB64) payload.foto=anivFotoB64;
+  db.collection('aniversariantes').add(payload).then(function(){
+    alert('Cadastro realizado!');
+    document.getElementById('aniv-nome').value='';
+    document.getElementById('aniv-data').value='';
+    document.getElementById('aniv-zap').value='';
+    anivFotoB64='';
+    var prev=document.getElementById('aniv-foto-preview');
+    if(prev) prev.innerHTML='<span style="font-size:22px">&#128247;</span>';
+    carregarAniversariantes();
+  }).catch(function(e){ alert('Erro: '+e.message); });
 }
 
-function pixOfertaDirigida() {
-  var destino = prompt('Para onde é a oferta? (Ex: Missões, EBF, Obras da Igreja, etc.)');
-  if (!destino) return;
-  cpix();
-  setTimeout(function() {
-    alert('Chave PIX copiada!\n\nAo transferir, coloque na mensagem: OFERTA - ' + destino.toUpperCase());
-  }, 500);
-}
-
-function cpix() {
-  var k = '+5521967280849';
-  try {
-    navigator.clipboard.writeText(k).then(function() {
-      alert('Chave PIX copiada: ' + k);
-  } catch(e) {
-    alert('PIX: ' + k);
-  }
-}
-
-
-// ── PWA INSTALL PROMPT ────────────────────────────────────────────────────
-var deferredPrompt = null;
-
-// Registrar Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/filadelfia-conecta/sw.js').then(function(reg) {
-      console.log('SW registrado:', reg.scope);
-    }).catch(function(err) {
-      console.log('SW erro:', err);
-}
-
-// Capturar evento de instalação
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  deferredPrompt = e;
-  // Mostrar banner após 3 segundos se não foi instalado
-  try {
-    if (!localStorage.getItem('app_installed')) {
-      setTimeout(function() {
-        var banner = document.getElementById('install-banner');
-        if (banner) banner.classList.add('show');
-      }, 3000);
-    }
-  } catch(ex) {}
-
-// Detectar quando foi instalado
-window.addEventListener('appinstalled', function() {
-  try { localStorage.setItem('app_installed', '1'); } catch(e) {}
-  fecharBanner();
-
-function installApp() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(result) {
-      if (result.outcome === 'accepted') {
-        try { localStorage.setItem('app_installed', '1'); } catch(e) {}
-        fecharBanner();
+function carregarAniversariantes(){
+  var lista=document.getElementById('aniv-lista'); if(!lista) return;
+  var mesAtual=new Date().getMonth()+1;
+  db.collection('aniversariantes').get().then(function(snap){
+    var html='';
+    snap.forEach(function(doc){
+      var av=doc.data(); var parts=(av.data||'').split('-'); var mes=parts.length>=2?parseInt(parts[1]):0;
+      if(mes===mesAtual){
+        var dia=parts[2]||'?';
+        var fotoHtml=av.foto?'<img src="'+av.foto+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #e8f5f0">':'<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#0F4D3A,#2D7A5F);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0">&#127874;</div>';
+        html+='<div class="card cp" style="margin-bottom:10px;display:flex;align-items:center;gap:12px">'
+          +'<div style="background:linear-gradient(135deg,#0F4D3A,#2D7A5F);color:#fff;border-radius:12px;padding:8px 10px;text-align:center;min-width:46px;flex-shrink:0"><div style="font-size:19px;font-weight:800;line-height:1">'+dia+'</div><div style="font-size:9px;text-transform:uppercase">Jun</div></div>'
+          +fotoHtml
+          +'<div style="flex:1"><div style="color:#0F4D3A;font-weight:700;font-size:15px">'+av.nome+'</div>'
+          +(av.zap?'<a href="https://wa.me/55'+av.zap.replace(/\D/g,'')+'?text=Feliz%20aniversario%20'+encodeURIComponent(av.nome)+'!%20Que%20Deus%20te%20abencoe!%20IPF" target="_blank" style="background:#25D366;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;display:inline-block;margin-top:5px">&#128172; Parabenizar</a>':'')
+          +'</div></div>';
       }
-      deferredPrompt = null;
+    });
+    lista.innerHTML=html||'<div style="text-align:center;color:#9CA3AF;padding:20px">Nenhum aniversariante este mes</div>';
+  }).catch(function(){});
+}
+
+function carregarDevocionalDia(){
+  var hoje=new Date().toISOString().split('T')[0];
+  db.collection('devocionais').where('data','==',hoje).limit(1).get().then(function(snap){
+    if(snap.empty) return;
+    var dv=snap.docs[0].data();
+    var campos={'devo-titulo-txt':dv.titulo,'devo-ver-txt':dv.versiculo,'devo-ref-txt':dv.referencia,'devo-ref-body':dv.reflexao,'devo-aplic-body':dv.aplicacao,'devo-oracao-body':dv.oracao};
+    Object.keys(campos).forEach(function(id){ var el=document.getElementById(id); if(el&&campos[id]) el.textContent=campos[id]; });
+  }).catch(function(){});
+}
+
+function compartilharDevo(){
+  var titulo=(document.getElementById('devo-titulo-txt')||{textContent:''}).textContent;
+  var ver=(document.getElementById('devo-ver-txt')||{textContent:''}).textContent;
+  var ref=(document.getElementById('devo-ref-txt')||{textContent:''}).textContent;
+  var reflex=(document.getElementById('devo-ref-body')||{textContent:''}).textContent;
+  var aplic=(document.getElementById('devo-aplic-body')||{textContent:''}).textContent;
+  var oracao=(document.getElementById('devo-oracao-body')||{textContent:''}).textContent;
+  var meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var dd=new Date(); var ds=dd.getDate()+' '+meses[dd.getMonth()]+' '+dd.getFullYear();
+  var campos={'prt-titulo':titulo,'prt-versiculo':ver,'prt-ref':ref,'prt-reflexao':reflex,'prt-aplic':aplic,'prt-oracao':oracao,'prt-data':ds};
+  Object.keys(campos).forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=campos[id]; });
+  var card=document.getElementById('devo-print');
+  if(!card){ alert('Nao foi possivel gerar.'); return; }
+  card.style.cssText='position:fixed;left:0;top:0;z-index:99999;width:380px';
+  var btn=document.querySelector('[onclick="compartilharDevo()"]');
+  if(btn){ btn.textContent='Gerando...'; btn.disabled=true; }
+  function restaurar(){ card.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;width:380px'; if(btn){ btn.textContent='Compartilhar como Imagem'; btn.disabled=false; } }
+  if(typeof html2canvas!=='undefined'){
+    setTimeout(function(){
+      html2canvas(card,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false}).then(function(canvas){
+        restaurar();
+        canvas.toBlob(function(blob){
+          if(!blob){ alert('Erro ao gerar.'); return; }
+          var file=new File([blob],'devocional-ipf.png',{type:'image/png'});
+          if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+            navigator.share({files:[file],title:'Devocional IPF',text:titulo}).catch(function(){ baixarImg(canvas); });
+          } else { baixarImg(canvas); }
+        },'image/png');
+      }).catch(function(){
+        restaurar();
+        var link='https://gustavocmotta22-cpu.github.io/filadelfia-conecta/';
+        if(navigator.share){ navigator.share({title:titulo,text:ver,url:link}); }
+        else{ window.open('https://wa.me/?text='+encodeURIComponent(titulo+'\n\n'+ver+'\n'+ref+'\n\n'+link),'_blank'); }
+      });
+    },300);
   } else {
-    // iOS — mostrar instrução manual
-    alert('Para instalar no iPhone:\n1. Toque no botão de Compartilhar (quadrado com seta)\n2. Role para baixo e toque em "Adicionar à Tela de Início"\n3. Toque em "Adicionar"');
+    restaurar();
+    var link='https://gustavocmotta22-cpu.github.io/filadelfia-conecta/';
+    if(navigator.share){ navigator.share({title:titulo,text:ver,url:link}); }
+    else{ window.open('https://wa.me/?text='+encodeURIComponent(titulo+'\n\n'+ver+'\n'+ref+'\n\n'+link),'_blank'); }
   }
 }
+function baixarImg(canvas){ var url=canvas.toDataURL('image/png'); var a=document.createElement('a'); a.href=url; a.download='devocional-ipf.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
 
-function fecharBanner() {
-  var b = document.getElementById('install-banner');
-  if (b) b.classList.remove('show');
+function alog(){
+  var e=document.getElementById('aem').value; var p=document.getElementById('apw').value; var ok=false;
+  if(e==='admin@filadelfia.app'&&p==='FiladelfiaCristo2026!'){ adm={fn:'Administrador',role:'MASTER',full:'ADM Administrador Master'}; ok=true; }
+  else if(e==='pastor@filadelfia.app'&&p==='Pastor@Filadelfia2026'){ adm={fn:'Pastor Rafael',role:'PASTOR',full:'ADM Pastor Rafael Ribeiro'}; ok=true; }
+  if(ok){ try{localStorage.setItem('adm',JSON.stringify(adm));}catch(x){} document.getElementById('aerr').style.display='none'; aupd(); go('admin-dashboard'); }
+  else{ document.getElementById('aerr').style.display='block'; }
+}
+function aupd(){
+  if(!adm) return;
+  var gn=document.getElementById('agn'); if(gn) gn.textContent='Ola, '+adm.fn+'!';
+  var aft=document.getElementById('aft'); if(aft) aft.textContent=adm.full;
+  var ar=document.getElementById('arole'); if(ar) ar.textContent=adm.role==='MASTER'?'Master':'Pastor';
+}
+function aout(){ adm=null; try{localStorage.removeItem('adm');}catch(e){} tab('home'); }
+
+function admDevoNovo(){
+  editDevoId=null;
+  document.getElementById('adm-devo-form-titulo').textContent='Nova Devocional';
+  ['df-data','df-titulo','df-versiculo','df-ref','df-reflexao','df-aplic','df-oracao'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  if(document.getElementById('df-data')) document.getElementById('df-data').value=new Date().toISOString().split('T')[0];
+  document.getElementById('df-msg').style.display='none';
+  document.getElementById('adm-devo-form').style.display='block';
+  window.scrollTo(0,0);
+}
+function admDevoCancelar(){ document.getElementById('adm-devo-form').style.display='none'; editDevoId=null; }
+function admDevoMsg(txt,ok){ var e=document.getElementById('df-msg'); e.textContent=txt; e.style.display='block'; e.style.background=ok?'#DCFCE7':'#FEE2E2'; e.style.color=ok?'#166534':'#991B1B'; if(ok) setTimeout(function(){e.style.display='none';},2500); }
+function admDevoSalvar(){
+  var data=document.getElementById('df-data').value, titulo=document.getElementById('df-titulo').value.trim();
+  var versiculo=document.getElementById('df-versiculo').value.trim(), referencia=document.getElementById('df-ref').value.trim();
+  var reflexao=document.getElementById('df-reflexao').value.trim(), aplicacao=document.getElementById('df-aplic').value.trim();
+  var oracao=document.getElementById('df-oracao').value.trim();
+  if(!data||!titulo||!versiculo||!reflexao||!aplicacao){ admDevoMsg('Preencha os campos obrigatorios (*).',false); return; }
+  var payload={data:data,titulo:titulo,versiculo:versiculo,referencia:referencia,reflexao:reflexao,aplicacao:aplicacao,oracao:oracao,autor:adm?adm.full:'ADM'};
+  admDevoMsg('Salvando...',true);
+  var op=editDevoId?db.collection('devocionais').doc(editDevoId).update(payload):db.collection('devocionais').add(payload);
+  op.then(function(){ admDevoMsg(editDevoId?'Atualizado!':'Salvo!',true); admDevoCancelar(); admDevoCarregar(); }).catch(function(e){ admDevoMsg('Erro: '+e.message,false); });
+}
+function admDevoCarregar(){
+  var lista=document.getElementById('adm-devo-lista'); if(!lista) return;
+  lista.innerHTML='<div style="text-align:center;padding:30px;color:#9CA3AF">Carregando...</div>';
+  db.collection('devocionais').orderBy('data','desc').limit(30).get().then(function(snap){
+    if(snap.empty){ lista.innerHTML='<div style="text-align:center;padding:30px;color:#9CA3AF">Nenhuma devocional. Toque em + Nova.</div>'; return; }
+    var html='';
+    snap.forEach(function(doc){
+      var dv=doc.data(); var hoje=new Date().toISOString().split('T')[0];
+      var badge=dv.data===hoje?' <span style="background:#DCFCE7;color:#166534;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px">HOJE</span>':'';
+      var parts=(dv.data||'').split('-'); var dataFmt=parts.length===3?parts[2]+'/'+parts[1]+'/'+parts[0]:dv.data||'';
+      html+='<div class="card cp" style="margin-bottom:10px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px"><div style="flex:1"><div style="color:#0F4D3A;font-weight:700;font-size:14px">'+dv.titulo+badge+'</div><div style="color:#9CA3AF;font-size:12px;margin-top:3px">'+dataFmt+' - '+(dv.autor||'ADM')+'</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button onclick="admDevoEditar(\''+doc.id+'\')" style="background:#EFF6FF;color:#1D4ED8;border:none;border-radius:10px;padding:7px 10px;font-size:12px;cursor:pointer">&#9998;</button><button onclick="admDevoExcluir(\''+doc.id+'\',\''+dv.titulo.replace(/'/g,"\\'")+'\')" style="background:#FFF1F2;color:#BE123C;border:none;border-radius:10px;padding:7px 10px;font-size:12px;cursor:pointer">&#128465;</button></div></div></div>';
+    });
+    lista.innerHTML=html;
+  }).catch(function(e){ lista.innerHTML='<div style="color:#EF4444;padding:16px">Erro: '+e.message+'</div>'; });
+}
+function admDevoEditar(id){
+  db.collection('devocionais').doc(id).get().then(function(doc){
+    if(!doc.exists) return; var dv=doc.data(); editDevoId=id;
+    document.getElementById('adm-devo-form-titulo').textContent='Editar Devocional';
+    var m={'df-data':dv.data,'df-titulo':dv.titulo,'df-versiculo':dv.versiculo,'df-ref':dv.referencia,'df-reflexao':dv.reflexao,'df-aplic':dv.aplicacao,'df-oracao':dv.oracao};
+    Object.keys(m).forEach(function(id){ var el=document.getElementById(id); if(el) el.value=m[id]||''; });
+    document.getElementById('df-msg').style.display='none';
+    document.getElementById('adm-devo-form').style.display='block';
+    window.scrollTo(0,0);
+  });
+}
+function admDevoExcluir(id,titulo){
+  if(!confirm('Excluir "'+titulo+'"?')) return;
+  db.collection('devocionais').doc(id).delete().then(function(){ admDevoCarregar(); });
 }
 
+function admAgendaSalvar(){
+  var data=document.getElementById('ag-data').value, titulo=document.getElementById('ag-titulo').value.trim();
+  if(!data||!titulo){ alert('Data e titulo obrigatorios.'); return; }
+  db.collection('agenda').add({data:data,hora:document.getElementById('ag-hora').value.trim(),titulo:titulo,desc:document.getElementById('ag-desc').value.trim()}).then(function(){ alert('Evento adicionado!'); ['ag-data','ag-hora','ag-titulo','ag-desc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admAgendaCarregar(); });
+}
+function admAgendaCarregar(){
+  var lista=document.getElementById('adm-agenda-lista'); if(!lista) return;
+  db.collection('agenda').orderBy('data').get().then(function(snap){
+    var html='';
+    snap.forEach(function(doc){ var ag=doc.data(); var parts=(ag.data||'').split('-'); var df=parts.length===3?parts[2]+'/'+parts[1]+'/'+parts[0]:ag.data||''; html+='<div class="card cp" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="color:#0F4D3A;font-weight:600;font-size:14px">'+ag.titulo+'</div><div style="color:#9CA3AF;font-size:12px">'+df+(ag.hora?' - '+ag.hora:'')+'</div></div><button onclick="db.collection(\'agenda\').doc(\''+doc.id+'\').delete().then(admAgendaCarregar)" style="background:#FFF1F2;color:#BE123C;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">&#128465;</button></div>'; });
+    lista.innerHTML=html||'<div style="color:#9CA3AF;text-align:center;padding:16px">Nenhum evento</div>';
+  });
+}
+
+function admLiturgiaSalvar(){
+  var data=document.getElementById('lt-data').value, nome=document.getElementById('lt-nome').value.trim();
+  if(!data||!nome){ alert('Data e nome obrigatorios.'); return; }
+  db.collection('liturgia').add({data:data,nome:nome,culto:document.getElementById('lt-culto').value.trim()}).then(function(){ alert('Adicionado!'); ['lt-data','lt-nome','lt-culto'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admLiturgiaCarregar(); });
+}
+function admLiturgiaCarregar(){
+  var lista=document.getElementById('adm-liturgia-lista'); if(!lista) return;
+  db.collection('liturgia').orderBy('data').get().then(function(snap){
+    var html='';
+    snap.forEach(function(doc){ var lt=doc.data(); var parts=(lt.data||'').split('-'); var df=parts.length===3?parts[2]+'/'+parts[1]+'/'+parts[0]:lt.data||''; html+='<div class="card cp" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="color:#0F4D3A;font-weight:600;font-size:14px">'+lt.nome+'</div><div style="color:#9CA3AF;font-size:12px">'+df+(lt.culto?' - '+lt.culto:'')+'</div></div><button onclick="db.collection(\'liturgia\').doc(\''+doc.id+'\').delete().then(admLiturgiaCarregar)" style="background:#FFF1F2;color:#BE123C;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">&#128465;</button></div>'; });
+    lista.innerHTML=html||'<div style="color:#9CA3AF;text-align:center;padding:16px">Nenhum registro</div>';
+  });
+}
+
+function admAnivSalvar(){
+  var nome=document.getElementById('av-nome').value.trim(), data=document.getElementById('av-data').value;
+  if(!nome||!data){ alert('Nome e data obrigatorios.'); return; }
+  db.collection('aniversariantes').add({nome:nome,data:data,zap:document.getElementById('av-zap').value.trim(),fonte:'admin'}).then(function(){ alert('Aniversariante adicionado!'); ['av-nome','av-data','av-zap'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admAnivCarregar(); carregarAniversariantes(); });
+}
+function admAnivCarregar(){
+  var lista=document.getElementById('adm-aniv-lista'); if(!lista) return;
+  db.collection('aniversariantes').orderBy('data').get().then(function(snap){
+    var html='';
+    snap.forEach(function(doc){ var av=doc.data(); var parts=(av.data||'').split('-'); var df=parts.length===3?parts[2]+'/'+parts[1]+'/'+parts[0]:av.data||''; html+='<div class="card cp" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="color:#0F4D3A;font-weight:600;font-size:14px">'+av.nome+'</div><div style="color:#9CA3AF;font-size:12px">'+df+(av.zap?' - '+av.zap:'')+'</div></div><button onclick="db.collection(\'aniversariantes\').doc(\''+doc.id+'\').delete().then(admAnivCarregar)" style="background:#FFF1F2;color:#BE123C;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">&#128465;</button></div>'; });
+    lista.innerHTML=html||'<div style="color:#9CA3AF;text-align:center;padding:16px">Nenhum aniversariante</div>';
+  });
+}
+
+function admLitSalvar(){
+  var titulo=document.getElementById('lv-titulo').value.trim(), url=document.getElementById('lv-url').value.trim();
+  if(!titulo||!url){ alert('Titulo e link obrigatorios.'); return; }
+  db.collection('literaturas').add({titulo:titulo,url:url,desc:document.getElementById('lv-desc').value.trim()}).then(function(){ alert('Literatura adicionada!'); ['lv-titulo','lv-url','lv-desc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admLitCarregar(); });
+}
+function admLitCarregar(){
+  var lista=document.getElementById('adm-lit-lista'); if(!lista) return;
+  db.collection('literaturas').get().then(function(snap){
+    var html='';
+    snap.forEach(function(doc){ var lv=doc.data(); html+='<div class="card cp" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div style="flex:1"><div style="color:#0F4D3A;font-weight:600;font-size:14px">'+lv.titulo+'</div><a href="'+lv.url+'" target="_blank" style="color:#2D7A5F;font-size:12px">'+lv.url.substring(0,40)+'...</a></div><button onclick="db.collection(\'literaturas\').doc(\''+doc.id+'\').delete().then(admLitCarregar)" style="background:#FFF1F2;color:#BE123C;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer">&#128465;</button></div>'; });
+    lista.innerHTML=html||'<div style="color:#9CA3AF;text-align:center;padding:16px">Nenhuma literatura adicionada</div>';
+  });
+}
+
+function admAvisoSalvar(){
+  var titulo=document.getElementById('avi-titulo').value.trim(), texto=document.getElementById('avi-texto').value.trim();
+  if(!titulo||!texto){ alert('Titulo e texto obrigatorios.'); return; }
+  db.collection('avisos').add({titulo:titulo,data:document.getElementById('avi-data').value.trim(),texto:texto,criado:new Date().toISOString()}).then(function(){ alert('Aviso publicado!'); ['avi-titulo','avi-data','avi-texto'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admAvisosCarregar(); });
+}
+function admAvisosCarregar(){
+  var lista=document.getElementById('adm-avisos-lista'); if(!lista) return;
+  db.collection('avisos').orderBy('criado','desc').limit(20).get().then(function(snap){
+    var html='';
+    snap.forEach(function(doc){ var av=doc.data(); html+='<div class="card cp" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="flex:1"><div style="color:#0F4D3A;font-weight:600;font-size:14px">'+av.titulo+'</div><div style="color:#9CA3AF;font-size:12px;margin-top:2px">'+(av.data||'')+'</div><div style="color:#6B7280;font-size:13px;margin-top:4px">'+av.texto.substring(0,80)+'</div></div><button onclick="db.collection(\'avisos\').doc(\''+doc.id+'\').delete().then(admAvisosCarregar)" style="background:#FFF1F2;color:#BE123C;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;flex-shrink:0">&#128465;</button></div>'; });
+    lista.innerHTML=html||'<div style="color:#9CA3AF;text-align:center;padding:16px">Nenhum aviso</div>';
+  });
+}
 </script>
 
 <!-- CARD DEVOCIONAL PARA IMAGEM -->
