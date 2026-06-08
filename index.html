@@ -34,8 +34,8 @@ input,textarea{font-family:inherit}
 .sp-dot:nth-child(2){animation-delay:.25s}
 .sp-dot:nth-child(3){animation-delay:.5s}
 
-#welcome-modal{position:fixed;inset:0;max-width:430px;margin:0 auto;z-index:8000;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
-#welcome-modal.show{display:flex}
+#welcome-modal{display:none}
+
 .wm-card{background:#fff;border-radius:28px 28px 0 0;padding:28px 24px;width:100%}
 .wm-logo{width:64px;height:64px;border-radius:50%;background:#0F4D3A;padding:10px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center}
 .wm-logo img{width:44px;height:44px;object-fit:contain;border-radius:50%}
@@ -148,6 +148,65 @@ textarea.fi{resize:none;height:100px}
 
 #splash { animation: splashOut 0.5s ease 2.5s forwards; }
 @keyframes splashOut { to { opacity: 0; pointer-events: none; } }
+
+/* BOTÃO FLUTUANTE WHATSAPP */
+#wpp-fab{
+  position:fixed;bottom:88px;right:16px;z-index:500;
+  background:#25D366;color:#fff;
+  border-radius:50px;padding:10px 16px;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 4px 20px rgba(37,211,102,.5);
+  cursor:pointer;border:none;font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:700;
+  animation:wppPulse 2s infinite;
+  text-decoration:none;max-width:200px;
+  transition:transform .15s;
+}
+#wpp-fab:active{transform:scale(.95)}
+.wpp-icon{font-size:20px;flex-shrink:0}
+.wpp-txt{line-height:1.2}
+.wpp-txt span{display:block;font-size:10px;font-weight:500;opacity:.9}
+@keyframes wppPulse{
+  0%,100%{box-shadow:0 4px 20px rgba(37,211,102,.5)}
+  50%{box-shadow:0 4px 32px rgba(37,211,102,.9),0 0 0 6px rgba(37,211,102,.2)}
+}
+
+/* MODAL WHATSAPP */
+#wpp-modal{
+  position:fixed;inset:0;max-width:430px;margin:0 auto;
+  z-index:8000;background:rgba(0,0,0,.6);
+  display:none;align-items:flex-end;justify-content:center;
+}
+#wpp-modal.show{display:flex}
+.wpp-card{
+  background:#fff;border-radius:28px 28px 0 0;
+  padding:28px 24px 36px;width:100%;
+}
+.wpp-card-logo{
+  width:60px;height:60px;border-radius:50%;
+  background:#25D366;padding:12px;
+  margin:0 auto 14px;display:flex;
+  align-items:center;justify-content:center;
+  font-size:28px;
+}
+.wpp-card-title{color:#0F4D3A;font-size:19px;font-weight:800;text-align:center;margin-bottom:8px}
+.wpp-card-text{color:#6B7280;font-size:14px;text-align:center;line-height:1.6;margin-bottom:20px}
+.wpp-card-benefits{background:#F0FDF4;border-radius:14px;padding:14px;margin-bottom:20px}
+.wpp-benefit{display:flex;align-items:center;gap:8px;font-size:13px;color:#0F4D3A;margin-bottom:6px;font-weight:500}
+.wpp-benefit:last-child{margin-bottom:0}
+.wpp-join-btn{
+  width:100%;background:#25D366;color:#fff;
+  font-weight:700;font-size:15px;padding:16px;
+  border-radius:16px;display:flex;align-items:center;
+  justify-content:center;gap:8px;
+  box-shadow:0 8px 24px rgba(37,211,102,.4);
+  text-decoration:none;margin-bottom:10px;
+}
+.wpp-close{
+  width:100%;color:#9CA3AF;font-size:13px;
+  padding:8px;text-align:center;cursor:pointer;
+  border:none;background:none;font-family:'Inter',sans-serif;
+}
 </style>
 </head>
 <body>
@@ -171,6 +230,32 @@ textarea.fi{resize:none;height:100px}
   </div>
 </div>
 <div id="app">
+
+<!-- BOTÃO FLUTUANTE WHATSAPP -->
+<button id="wpp-fab" onclick="abrirWppModal()" id="wpp-fab-btn">
+  <span class="wpp-icon">📲</span>
+  <div class="wpp-txt">Receber avisos<span>pelo WhatsApp</span></div>
+</button>
+
+<!-- MODAL WHATSAPP -->
+<div id="wpp-modal">
+  <div class="wpp-card">
+    <div class="wpp-card-logo">💬</div>
+    <div class="wpp-card-title">Fique por dentro de tudo!</div>
+    <div class="wpp-card-text">Entre no grupo oficial da IPF Filadélfia e receba as atualizações direto no seu WhatsApp.</div>
+    <div class="wpp-card-benefits">
+      <div class="wpp-benefit">📅 Agenda e programações atualizadas</div>
+      <div class="wpp-benefit">📢 Avisos e comunicados da igreja</div>
+      <div class="wpp-benefit">🙏 Pedidos de oração da comunidade</div>
+      <div class="wpp-benefit">✝️ Novidades do Filadélfia Conecta</div>
+    </div>
+    <a href="https://chat.whatsapp.com/LEg8oU27llpAmQHQvtMvpA" target="_blank" class="wpp-join-btn" onclick="wppEntrou()">
+      💬 Entrar no Grupo de Avisos
+    </a>
+    <button class="wpp-close" onclick="fecharWppModal()">Agora não</button>
+  </div>
+</div>
+
 <div id="s-home" class="screen active">
   <div class="hh">
     <div class="hh-top">
@@ -665,6 +750,13 @@ var TABS=['home','cultos','comunidade','literaturas','mais'];
 var ADMIN=['admin-login','admin-dashboard'];
 
 function initApp() {
+  // Verificar se já entrou no grupo e ocultar FAB
+  try {
+    if (localStorage.getItem('wpp_joined')) {
+      var fab = document.getElementById('wpp-fab');
+      if (fab) fab.style.display = 'none';
+    }
+  } catch(e) {}
   try {
     var sp = document.getElementById('splash');
     if (sp) { sp.style.opacity='0'; sp.style.transition='opacity 0.5s'; setTimeout(function(){ sp.style.display='none'; }, 500); }
@@ -684,6 +776,8 @@ function act(n) {
   var t = document.getElementById('s-' + n);
   if (t) { t.classList.add('active'); t.scrollTop = 0; window.scrollTo(0,0); cs = n; }
   document.getElementById('bnav').style.display = ADMIN.indexOf(n) >= 0 ? 'none' : 'flex';
+  var fab = document.getElementById('wpp-fab');
+  if (fab) { fab.style.display = ADMIN.indexOf(n) >= 0 ? 'none' : (localStorage.getItem('wpp_joined') ? 'none' : 'flex'); }
 }
 function go(n) { hist.push(cs); act(n); }
 function tab(n) {
@@ -804,6 +898,22 @@ function aout() {
   adm = null;
   try { localStorage.removeItem('adm'); } catch(e) {}
   tab('home');
+}
+
+function abrirWppModal() {
+  var m = document.getElementById('wpp-modal');
+  if (m) m.classList.add('show');
+}
+function fecharWppModal() {
+  var m = document.getElementById('wpp-modal');
+  if (m) m.classList.remove('show');
+}
+function wppEntrou() {
+  try { localStorage.setItem('wpp_joined','1'); } catch(e) {}
+  fecharWppModal();
+  // Ocultar o botão flutuante após entrar
+  var fab = document.getElementById('wpp-fab');
+  if (fab) fab.style.display = 'none';
 }
 </script>
 </body>
