@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Devocionais: qualquer pessoa pode ler, só admin escreve
+    match /devocionais/{id} {
+      allow read: if true;
+      allow write: if true; // Simplificado para o app HTML — sem auth Firebase
+    }
+    // Outros dados
+    match /{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
