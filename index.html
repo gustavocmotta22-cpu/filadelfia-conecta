@@ -661,7 +661,7 @@ var cs='home', hist=[], adm=null;
 var TABS=['home','cultos','comunidade','literaturas','mais'];
 var ADMIN=['admin-login','admin-dashboard'];
 
-window.addEventListener('load', function() {
+window.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() {
     var sp = document.getElementById('splash');
     sp.classList.add('hide');
@@ -682,7 +682,7 @@ window.addEventListener('load', function() {
         }
       } catch(e) {}
     }, 500);
-  }, 2600);
+  }, 1800);
 });
 
 function act(n) {
