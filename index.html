@@ -735,10 +735,7 @@ window.addEventListener('load', function() {
             document.getElementById('welcome-modal').classList.add('show');
           }, 1500);
         }
-      } catch(e) {}
-    }, 500);
   }, 2600);
-});
 
 function act(n) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
@@ -813,7 +810,6 @@ function cadAniv() {
     var list = JSON.parse(localStorage.getItem('anivs') || '[]');
     list.push({nome:n, data:d, zap:z});
     localStorage.setItem('anivs', JSON.stringify(list));
-  } catch(e) {}
   alert('Cadastro realizado! Voce recebera parabens no seu dia!');
   document.getElementById('aniv-nome').value = '';
   document.getElementById('aniv-data').value = '';
@@ -883,7 +879,6 @@ function enviarOracao() {
     if (document.getElementById('or-ped')) document.getElementById('or-ped').value = '';
   }).catch(function() {
     alert('Pedido enviado! Estaremos orando por voce.');
-  });
 }
 
 // ── EBF → WhatsApp Irmã Joyce ─────────────────────────────────────────
@@ -935,7 +930,6 @@ function cpix() {
   try {
     navigator.clipboard.writeText(k).then(function() {
       alert('Chave PIX copiada: ' + k);
-    });
   } catch(e) {
     alert('PIX: ' + k);
   }
@@ -952,8 +946,6 @@ if ('serviceWorker' in navigator) {
       console.log('SW registrado:', reg.scope);
     }).catch(function(err) {
       console.log('SW erro:', err);
-    });
-  });
 }
 
 // Capturar evento de instalação
@@ -969,13 +961,11 @@ window.addEventListener('beforeinstallprompt', function(e) {
       }, 3000);
     }
   } catch(ex) {}
-});
 
 // Detectar quando foi instalado
 window.addEventListener('appinstalled', function() {
   try { localStorage.setItem('app_installed', '1'); } catch(e) {}
   fecharBanner();
-});
 
 function installApp() {
   if (deferredPrompt) {
@@ -986,7 +976,6 @@ function installApp() {
         fecharBanner();
       }
       deferredPrompt = null;
-    });
   } else {
     // iOS — mostrar instrução manual
     alert('Para instalar no iPhone:\n1. Toque no botão de Compartilhar (quadrado com seta)\n2. Role para baixo e toque em "Adicionar à Tela de Início"\n3. Toque em "Adicionar"');
