@@ -670,7 +670,7 @@ window.addEventListener('load', function() {
       document.getElementById('app').style.display = 'block';
       var d = new Date();
       var el = document.getElementById('ddate');
-      if (el) el.textContent = d.toLocaleDateString('pt-BR', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      if (el) var opts = {}; opts.weekday='long'; opts.day='numeric'; opts.month='long'; opts.year='numeric'; el.textContent = d.toLocaleDateString('pt-BR', opts);
       try {
         var saved = localStorage.getItem('adm');
         if (saved) { adm = JSON.parse(saved); aupd(); }
