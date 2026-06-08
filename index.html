@@ -741,15 +741,22 @@ var TABS=['home','cultos','comunidade','literaturas','mais'];
 var ADMIN=['admin-login','admin-dashboard','admin-devocionais','admin-agenda','admin-liturgia','admin-aniversariantes','admin-literaturas','admin-avisos'];
 var editDevoId=null, anivFotoB64='';
 
-firebase.initializeApp({
-  apiKey:"AIzaSyAz8bWXxXmAmowcTRc_jOLclEB4LMIPEmQ",
-  authDomain:"filadelfia-conecta.firebaseapp.com",
-  projectId:"filadelfia-conecta",
-  storageBucket:"filadelfia-conecta.firebasestorage.app",
-  messagingSenderId:"805912319328",
-  appId:"1:805912319328:web:7a1401be7e60c53a413a05"
-});
-var db = firebase.firestore();
+var db = null;
+try {
+  if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey:"AIzaSyAz8bWXxXmAmowcTRc_jOLclEB4LMIPEmQ",
+        authDomain:"filadelfia-conecta.firebaseapp.com",
+        projectId:"filadelfia-conecta",
+        storageBucket:"filadelfia-conecta.firebasestorage.app",
+        messagingSenderId:"805912319328",
+        appId:"1:805912319328:web:7a1401be7e60c53a413a05"
+      });
+    }
+    db = firebase.firestore();
+  }
+} catch(e) { console.log('Firebase erro:', e); }
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
@@ -783,6 +790,12 @@ function initApp(){
   if(typeof carregarDevocionalDia==='function') carregarDevocionalDia();
   if(typeof carregarAniversariantes==='function') carregarAniversariantes();
 }
+
+function dbOp(fn) {
+  if (!db) { console.log('Firebase nao disponivel'); return Promise.resolve({empty:true,forEach:function(){},docs:[]}); }
+  return fn();
+}
+
 setTimeout(initApp,1500);
 
 function act(n){
