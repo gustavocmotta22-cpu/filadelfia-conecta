@@ -842,6 +842,85 @@ function aout() {
   try { localStorage.removeItem('adm'); } catch(e) {}
   tab('home');
 }
+
+// ── ORAÇÃO → Firebase ────────────────────────────────────────────────────
+function enviarOracao() {
+  var nome = document.getElementById('or-nome') ? document.getElementById('or-nome').value.trim() : '';
+  var pedido = document.getElementById('or-ped') ? document.getElementById('or-ped').value.trim() : '';
+  if (!pedido) { alert('Por favor, escreva seu pedido.'); return; }
+  db.collection('oracoes').add({
+    nome: nome || 'Anonimo',
+    pedido: pedido,
+    data: new Date().toISOString(),
+    lido: false
+  }).then(function() {
+    alert('Pedido enviado! Estaremos orando por voce.');
+    if (document.getElementById('or-nome')) document.getElementById('or-nome').value = '';
+    if (document.getElementById('or-ped')) document.getElementById('or-ped').value = '';
+  }).catch(function() {
+    alert('Pedido enviado! Estaremos orando por voce.');
+  });
+}
+
+// ── EBF → WhatsApp Irmã Joyce ─────────────────────────────────────────
+function inscricaoEBF() {
+  var nome = prompt('Nome da criança:');
+  if (!nome) return;
+  var idade = prompt('Idade da criança:');
+  if (!idade) return;
+  var sexo = prompt('Sexo (Masculino / Feminino):');
+  if (!sexo) return;
+  var msg = 'Inscricao EBF 2026%0A%0A'
+    + 'Nome: ' + encodeURIComponent(nome) + '%0A'
+    + 'Idade: ' + encodeURIComponent(idade) + ' anos%0A'
+    + 'Sexo: ' + encodeURIComponent(sexo) + '%0A%0A'
+    + 'Aguardo confirmacao. Obrigado!';
+  window.open('https://wa.me/5521986516710?text=' + msg, '_blank');
+}
+
+// ── PIX / CONTRIBUIÇÕES ───────────────────────────────────────────────
+function abrirPix() { go('contrib'); }
+
+function pixDizimo() {
+  var chave = '+5521967280849';
+  var msg = 'Dizimo%20-%20Igreja%20Presbiteriana%20Filadelfia';
+  cpix();
+  setTimeout(function() {
+    alert('Chave PIX copiada!
+
+Ao transferir, coloque na mensagem: DIZIMO');
+  }, 500);
+}
+
+function pixOferta() {
+  cpix();
+  setTimeout(function() {
+    alert('Chave PIX copiada!
+
+Ao transferir, coloque na mensagem: OFERTA GERAL');
+  }, 500);
+}
+
+function pixOfertaDirigida() {
+  var destino = prompt('Para onde é a oferta? (Ex: Missões, EBF, Obras da Igreja, etc.)');
+  if (!destino) return;
+  cpix();
+  setTimeout(function() {
+    alert('Chave PIX copiada!\n\nAo transferir, coloque na mensagem: OFERTA - ' + destino.toUpperCase());
+  }, 500);
+}
+
+function cpix() {
+  var k = '+5521967280849';
+  try {
+    navigator.clipboard.writeText(k).then(function() {
+      alert('Chave PIX copiada: ' + k);
+    });
+  } catch(e) {
+    alert('PIX: ' + k);
+  }
+}
+
 </script>
 </body>
 </html>
