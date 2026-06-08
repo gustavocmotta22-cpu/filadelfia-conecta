@@ -34,8 +34,8 @@ input,textarea{font-family:inherit}
 .sp-dot:nth-child(2){animation-delay:.25s}
 .sp-dot:nth-child(3){animation-delay:.5s}
 
-#welcome-modal{display:none}
-
+#welcome-modal{position:fixed;inset:0;max-width:430px;margin:0 auto;z-index:8000;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
+#welcome-modal.show{display:flex}
 .wm-card{background:#fff;border-radius:28px 28px 0 0;padding:28px 24px;width:100%}
 .wm-logo{width:64px;height:64px;border-radius:50%;background:#0F4D3A;padding:10px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center}
 .wm-logo img{width:44px;height:44px;object-fit:contain;border-radius:50%}
@@ -46,7 +46,7 @@ input,textarea{font-family:inherit}
 .wm-btn{width:100%;background:#0F4D3A;color:#fff;font-weight:700;font-size:15px;padding:15px;border-radius:14px;box-shadow:0 8px 24px rgba(15,77,58,.3);margin-bottom:10px;cursor:pointer;border:none;font-family:'Inter',sans-serif}
 .wm-skip{width:100%;color:#9CA3AF;font-size:13px;padding:8px;text-align:center;cursor:pointer;border:none;background:none;font-family:'Inter',sans-serif}
 
-#app{display:block}
+#app{display:none}
 .screen{display:none;min-height:100vh;padding-bottom:80px}
 .screen.active{display:block;animation:su .3s ease}
 
@@ -145,278 +145,10 @@ textarea.fi{resize:none;height:100px}
 
 @keyframes su{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.4}}
-
-
-
-
-/* BOTÃO FLUTUANTE WHATSAPP */
-#wpp-fab{
-  position:fixed;bottom:88px;right:16px;z-index:500;
-  background:#25D366;color:#fff;
-  border-radius:50px;padding:10px 16px;
-  display:flex;align-items:center;gap:8px;
-  box-shadow:0 4px 20px rgba(37,211,102,.5);
-  cursor:pointer;border:none;font-family:'Inter',sans-serif;
-  font-size:13px;font-weight:700;
-  animation:wppPulse 2s infinite;
-  text-decoration:none;max-width:200px;
-  transition:transform .15s;
-}
-#wpp-fab:active{transform:scale(.95)}
-.wpp-icon{font-size:20px;flex-shrink:0}
-.wpp-txt{line-height:1.2}
-.wpp-txt span{display:block;font-size:10px;font-weight:500;opacity:.9}
-@keyframes wppPulse{
-  0%,100%{box-shadow:0 4px 20px rgba(37,211,102,.5)}
-  50%{box-shadow:0 4px 32px rgba(37,211,102,.9),0 0 0 6px rgba(37,211,102,.2)}
-}
-
-/* MODAL WHATSAPP */
-#wpp-modal{
-  position:fixed;inset:0;max-width:430px;margin:0 auto;
-  z-index:8000;background:rgba(0,0,0,.6);
-  display:none;align-items:flex-end;justify-content:center;
-}
-#wpp-modal.show{display:flex}
-.wpp-card{
-  background:#fff;border-radius:28px 28px 0 0;
-  padding:28px 24px 36px;width:100%;
-}
-.wpp-card-logo{
-  width:60px;height:60px;border-radius:50%;
-  background:#25D366;padding:12px;
-  margin:0 auto 14px;display:flex;
-  align-items:center;justify-content:center;
-  font-size:28px;
-}
-.wpp-card-title{color:#0F4D3A;font-size:19px;font-weight:800;text-align:center;margin-bottom:8px}
-.wpp-card-text{color:#6B7280;font-size:14px;text-align:center;line-height:1.6;margin-bottom:20px}
-.wpp-card-benefits{background:#F0FDF4;border-radius:14px;padding:14px;margin-bottom:20px}
-.wpp-benefit{display:flex;align-items:center;gap:8px;font-size:13px;color:#0F4D3A;margin-bottom:6px;font-weight:500}
-.wpp-benefit:last-child{margin-bottom:0}
-.wpp-join-btn{
-  width:100%;background:#25D366;color:#fff;
-  font-weight:700;font-size:15px;padding:16px;
-  border-radius:16px;display:flex;align-items:center;
-  justify-content:center;gap:8px;
-  box-shadow:0 8px 24px rgba(37,211,102,.4);
-  text-decoration:none;margin-bottom:10px;
-}
-.wpp-close{
-  width:100%;color:#9CA3AF;font-size:13px;
-  padding:8px;text-align:center;cursor:pointer;
-  border:none;background:none;font-family:'Inter',sans-serif;
-}
 </style>
-
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js">
-// ── CRUD DEVOCIONAIS ─────────────────────────────────────────────────────────
-var editandoDevoId = null;
-
-function abrirFormDevocional() {
-  editandoDevoId = null;
-  document.getElementById('form-devo-titulo-label').textContent = 'Nova Devocional';
-  document.getElementById('form-devo-by').textContent = adm ? 'Por: ' + adm.full : '';
-  document.getElementById('devo-data').value = new Date().toISOString().split('T')[0];
-  document.getElementById('devo-titulo').value = '';
-  document.getElementById('devo-versiculo').value = '';
-  document.getElementById('devo-referencia').value = '';
-  document.getElementById('devo-reflexao').value = '';
-  document.getElementById('devo-aplicacao').value = '';
-  document.getElementById('devo-oracao').value = '';
-  document.getElementById('devo-form-msg').style.display = 'none';
-  document.getElementById('form-devo').style.display = 'block';
-  window.scrollTo(0,0);
-}
-
-function cancelarFormDevocional() {
-  document.getElementById('form-devo').style.display = 'none';
-  editandoDevoId = null;
-}
-
-function mostrarMsgDevo(txt, ok) {
-  var el = document.getElementById('devo-form-msg');
-  el.textContent = txt;
-  el.style.display = 'block';
-  el.style.background = ok ? '#DCFCE7' : '#FEE2E2';
-  el.style.color = ok ? '#166534' : '#991B1B';
-  el.style.border = ok ? '1px solid #BBF7D0' : '1px solid #FECACA';
-  if (ok) setTimeout(function() { el.style.display = 'none'; }, 3000);
-}
-
-function salvarDevocional() {
-  var data = document.getElementById('devo-data').value;
-  var titulo = document.getElementById('devo-titulo').value.trim();
-  var versiculo = document.getElementById('devo-versiculo').value.trim();
-  var referencia = document.getElementById('devo-referencia').value.trim();
-  var reflexao = document.getElementById('devo-reflexao').value.trim();
-  var aplicacao = document.getElementById('devo-aplicacao').value.trim();
-  var oracao = document.getElementById('devo-oracao').value.trim();
-
-  if (!data || !titulo || !versiculo || !reflexao || !aplicacao) {
-    mostrarMsgDevo('Preencha os campos obrigatorios (*)','');
-    return;
-  }
-
-  var payload = {
-    data: data,
-    titulo: titulo,
-    versiculo: versiculo,
-    referencia: referencia,
-    reflexao: reflexao,
-    aplicacao: aplicacao,
-    oracao: oracao,
-    autor: adm ? adm.full : 'ADM',
-    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  mostrarMsgDevo('Salvando...', true);
-
-  var op;
-  if (editandoDevoId) {
-    op = db.collection('devocionais').doc(editandoDevoId).update(payload);
-  } else {
-    op = db.collection('devocionais').add(payload);
-  }
-
-  op.then(function() {
-    mostrarMsgDevo(editandoDevoId ? 'Devocional atualizado!' : 'Devocional salvo!', true);
-    cancelarFormDevocional();
-    carregarDevocionais();
-  }).catch(function(e) {
-    mostrarMsgDevo('Erro ao salvar: ' + e.message, false);
-  });
-}
-
-function carregarDevocionais() {
-  var loading = document.getElementById('devo-loading');
-  var lista = document.getElementById('devo-lista');
-  if (!loading || !lista) return;
-  loading.style.display = 'block';
-  lista.innerHTML = '';
-
-  db.collection('devocionais').orderBy('data','desc').limit(30).get()
-  .then(function(snap) {
-    loading.style.display = 'none';
-    if (snap.empty) {
-      lista.innerHTML = '<div style="text-align:center;padding:40px;color:#9CA3AF;font-size:14px">Nenhuma devocional cadastrada ainda.<br>Toque em + Nova para adicionar.</div>';
-      return;
-    }
-    snap.forEach(function(doc) {
-      var dv = doc.data();
-      var card = document.createElement('div');
-      card.style.cssText = 'background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(15,77,58,.06)';
-      var hoje = new Date().toISOString().split('T')[0];
-      var badge = dv.data === hoje ? '<span style="background:#DCFCE7;color:#166534;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;margin-left:8px">HOJE</span>' : '';
-      card.innerHTML =
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">' +
-          '<div style="flex:1">' +
-            '<div style="color:#0F4D3A;font-weight:700;font-size:15px">' + dv.titulo + badge + '</div>' +
-            '<div style="color:#9CA3AF;font-size:12px;margin-top:3px">' + formatarData(dv.data) + ' · ' + (dv.autor||'ADM') + '</div>' +
-            '<div style="color:#6B7280;font-size:12px;margin-top:5px;font-style:italic">' + (dv.referencia||'') + '</div>' +
-          '</div>' +
-          '<div style="display:flex;gap:6px;flex-shrink:0">' +
-            '<button onclick="editarDevocional('' + doc.id + '')" style="background:#EFF6FF;color:#1D4ED8;border:none;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer">✏️</button>' +
-            '<button onclick="excluirDevocional('' + doc.id + '','' + dv.titulo.replace(/'/g,"\'") + '')" style="background:#FFF1F2;color:#BE123C;border:none;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer">🗑️</button>' +
-          '</div>' +
-        '</div>';
-      lista.appendChild(card);
-    });
-  }).catch(function(e) {
-    loading.textContent = 'Erro ao carregar: ' + e.message;
-  });
-}
-
-function editarDevocional(id) {
-  db.collection('devocionais').doc(id).get().then(function(doc) {
-    if (!doc.exists) return;
-    var dv = doc.data();
-    editandoDevoId = id;
-    document.getElementById('form-devo-titulo-label').textContent = 'Editar Devocional';
-    document.getElementById('form-devo-by').textContent = 'Editando por: ' + (adm ? adm.full : 'ADM');
-    document.getElementById('devo-data').value = dv.data || '';
-    document.getElementById('devo-titulo').value = dv.titulo || '';
-    document.getElementById('devo-versiculo').value = dv.versiculo || '';
-    document.getElementById('devo-referencia').value = dv.referencia || '';
-    document.getElementById('devo-reflexao').value = dv.reflexao || '';
-    document.getElementById('devo-aplicacao').value = dv.aplicacao || '';
-    document.getElementById('devo-oracao').value = dv.oracao || '';
-    document.getElementById('devo-form-msg').style.display = 'none';
-    document.getElementById('form-devo').style.display = 'block';
-    window.scrollTo(0,0);
-  });
-}
-
-function excluirDevocional(id, titulo) {
-  if (!confirm('Excluir a devocional "' + titulo + '"? Esta acao nao pode ser desfeita.')) return;
-  db.collection('devocionais').doc(id).delete()
-  .then(function() { carregarDevocionais(); })
-  .catch(function(e) { alert('Erro ao excluir: ' + e.message); });
-}
-
-function formatarData(str) {
-  if (!str) return '';
-  var p = str.split('-');
-  if (p.length !== 3) return str;
-  return p[2] + '/' + p[1] + '/' + p[0];
-}
-
-// Carregar devocional do dia na tela do usuário
-function carregarDevocionalDoDia() {
-  var hoje = new Date().toISOString().split('T')[0];
-  db.collection('devocionais').where('data','==',hoje).limit(1).get()
-  .then(function(snap) {
-    if (snap.empty) return; // Mantém o devocional padrão
-    var dv = snap.docs[0].data();
-    var el = document.getElementById('devo-content');
-    if (!el) return;
-    el.innerHTML =
-      '<div style="color:rgba(255,255,255,.55);font-size:13px;margin-top:8px;position:relative">' + formatarData(dv.data) + '</div>' +
-      '<div style="color:#fff;font-size:22px;font-weight:800;margin-top:5px;position:relative;line-height:1.3">' + dv.titulo + '</div>' +
-      '<div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:14px;margin-top:10px;position:relative">' +
-        '<div style="color:#fff;font-size:14px;font-style:italic;line-height:1.6">' + dv.versiculo + '</div>' +
-        '<div style="color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-top:6px">' + (dv.referencia||'') + '</div>' +
-      '</div>';
-    var body = document.getElementById('devo-body');
-    if (body) body.innerHTML =
-      '<div class="card" style="margin:12px 16px 0;padding:16px">' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;border-radius:9px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;font-size:14px">📚</div><span style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Reflexao</span></div>' +
-        '<div style="color:#6B7280;font-size:14px;line-height:1.7">' + dv.reflexao + '</div>' +
-      '</div>' +
-      '<div class="card" style="margin:10px 16px 0;padding:16px">' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;border-radius:9px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:14px">✋</div><span style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Aplicacao</span></div>' +
-        '<div style="color:#6B7280;font-size:14px;line-height:1.7">' + dv.aplicacao + '</div>' +
-      '</div>' +
-      (dv.oracao ? '<div class="card" style="margin:10px 16px 0;padding:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;border-radius:9px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:14px">🙏</div><span style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Oracao</span></div><div style="background:rgba(15,77,58,.04);border-radius:10px;padding:12px;color:#6B7280;font-size:14px;line-height:1.7;font-style:italic">' + dv.oracao + '</div></div>' : '') +
-      '<div style="padding:12px 16px 0"><button class="sbtn" onclick="sdevo()">📤 Compartilhar Devocional</button></div>';
-  }).catch(function() {});
-}
-
-// Carregar devocionais ao entrar na tela admin
-var _origAct = act;
-act = function(n) {
-  _origAct(n);
-  if (n === 'admin-devocionais') carregarDevocionais();
-  if (n === 'devocional') carregarDevocionalDoDia();
-};
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script>
-var firebaseConfig = {
-  apiKey: "AIzaSyAz8bWXxXmAmowcTRc_jOLclEB4LMIPEmQ",
-  authDomain: "filadelfia-conecta.firebaseapp.com",
-  projectId: "filadelfia-conecta",
-  storageBucket: "filadelfia-conecta.firebasestorage.app",
-  messagingSenderId: "805912319328",
-  appId: "1:805912319328:web:7a1401be7e60c53a413a05"
-};
-firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
-</script>
 </head>
 <body>
-<div id="splash" onclick="initApp()" style="cursor:pointer">
+<div id="splash">
   <div class="sp-logo"><img src="data:image/jpeg;base64,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" alt="IPF"></div>
   <div class="sp-church">Igreja Presbiteriana</div>
   <div class="sp-name">FILADÉLFIA</div>
@@ -436,32 +168,6 @@ var db = firebase.firestore();
   </div>
 </div>
 <div id="app">
-
-<!-- BOTÃO FLUTUANTE WHATSAPP -->
-<button id="wpp-fab" onclick="abrirWppModal()">
-  <span class="wpp-icon">📲</span>
-  <div class="wpp-txt">Receber avisos<span>pelo WhatsApp</span></div>
-</button>
-
-<!-- MODAL WHATSAPP -->
-<div id="wpp-modal">
-  <div class="wpp-card">
-    <div class="wpp-card-logo">💬</div>
-    <div class="wpp-card-title">Fique por dentro de tudo!</div>
-    <div class="wpp-card-text">Entre no grupo oficial da IPF Filadélfia e receba as atualizações direto no seu WhatsApp.</div>
-    <div class="wpp-card-benefits">
-      <div class="wpp-benefit">📅 Agenda e programações atualizadas</div>
-      <div class="wpp-benefit">📢 Avisos e comunicados da igreja</div>
-      <div class="wpp-benefit">🙏 Pedidos de oração da comunidade</div>
-      <div class="wpp-benefit">✝️ Novidades do Filadélfia Conecta</div>
-    </div>
-    <a href="https://chat.whatsapp.com/LEg8oU27llpAmQHQvtMvpA" target="_blank" class="wpp-join-btn" onclick="wppEntrou()">
-      💬 Entrar no Grupo de Avisos
-    </a>
-    <button class="wpp-close" onclick="fecharWppModal()">Agora não</button>
-  </div>
-</div>
-
 <div id="s-home" class="screen active">
   <div class="hh">
     <div class="hh-top">
@@ -527,7 +233,7 @@ var db = firebase.firestore();
     <div class="cg"><div class="cdh"><div class="cdb">SÁB</div><span style="color:#0F4D3A;font-weight:600;font-size:14px">Sábado</span></div><div class="ci"><div class="ci-em">🕊️</div><div><div class="ci-h">08h00</div><div class="ci-n">Consagração</div><div class="ci-d">Momento de oração e consagração</div></div></div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 16px 16px">
       <a href="https://www.google.com/maps/search/?api=1&query=Rua+Vicente+de+Lima+Cleto+250+São+Gonçalo+RJ" target="_blank" style="padding:14px;border-radius:16px;background:#0F4D3A;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 6px 20px rgba(15,77,58,.3)">📍 Como Chegar</a>
-      <a href="https://www.youtube.com/@IPBFiladélfiaemsãogonçalo" target="_blank" style="padding:14px;border-radius:16px;background:#fff;color:#0F4D3A;border:2px solid rgba(15,77,58,.15);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px">▶ Online</a>
+      <a href="https://youtube.com" target="_blank" style="padding:14px;border-radius:16px;background:#fff;color:#0F4D3A;border:2px solid rgba(15,77,58,.15);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px">▶ Online</a>
     </div>
   </div>
 </div>
@@ -631,22 +337,12 @@ var db = firebase.firestore();
 <div id="s-devocional" class="screen">
   <div style="background:#0F4D3A;padding:44px 18px 22px;position:relative;overflow:hidden">
     <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(255,255,255,.1),transparent)"></div>
-    <!-- Cabeçalho com logo e botão voltar -->
-    <div style="display:flex;align-items:center;gap:10px;position:relative;margin-bottom:12px" id="devo-top">
-      <button onclick="back()" style="color:rgba(255,255,255,.9);font-size:24px;background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0">←</button>
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px">
-        <div style="width:32px;height:32px;border-radius:50%;background:#fff;padding:3px;display:flex;align-items:center;justify-content:center">
-          <img src="data:image/jpeg;base64,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" alt="IPF" style="width:26px;height:26px;object-fit:contain;border-radius:50%">
-        </div>
-        <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:.5px">DEVOCIONAL DIÁRIO</span>
-      </div>
-      <div style="width:32px"></div>
-    </div>
-    <div id="devo-content"><div style="color:rgba(255,255,255,.55);font-size:13px;margin-top:8px;text-transform:capitalize;position:relative" id="ddate"></div>
+    <button class="ph-back" onclick="back()">←</button>
+    <div style="color:rgba(255,255,255,.55);font-size:13px;margin-top:8px;text-transform:capitalize;position:relative" id="ddate"></div>
     <div style="color:#fff;font-size:22px;font-weight:800;margin-top:5px;position:relative;line-height:1.3">Confiança em Deus em Todos os Caminhos</div>
     <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:14px;margin-top:10px;position:relative"><div style="color:#fff;font-size:14px;font-style:italic;line-height:1.6">"Confie no Senhor de todo o seu coração e não se apóie em seu próprio entendimento; reconheça-o em todos os seus caminhos, e ele aplainará as suas veredas."</div><div style="color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-top:6px">Provérbios 3:5-6</div></div>
   </div>
-  <div id="devo-body" style="padding:0 0 16px">
+  <div style="padding:0 0 16px">
     <div class="card" style="margin:12px 16px 0;padding:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;border-radius:9px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;font-size:14px">📚</div><span style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Reflexão</span></div><div style="color:#6B7280;font-size:14px;line-height:1.7">Vivemos em um mundo que nos pede para depender de nossa própria inteligência. Mas Deus nos convida a uma vida de confiança plena n'Ele.<br><br>Confiar no Senhor de todo o coração implica uma entrega completa — uma confiança que reconhece que Deus é soberano sobre cada detalhe da nossa vida.</div></div>
     <div class="card" style="margin:10px 16px 0;padding:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;border-radius:9px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:14px">✋</div><span style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Aplicação</span></div><div style="color:#6B7280;font-size:14px;line-height:1.7">Hoje, quando você se deparar com uma decisão difícil, pause e ore: Senhor, confio em Ti. Pratique reconhecê-Lo em cada escolha que fizer.</div></div>
     <div class="card" style="margin:10px 16px 0;padding:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;border-radius:9px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:14px">🙏</div><span style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Oração</span></div><div style="background:rgba(15,77,58,.04);border-radius:10px;padding:12px;color:#6B7280;font-size:14px;line-height:1.7;font-style:italic">Pai celestial, perdoa-me pelas vezes em que me apoiei em meu próprio entendimento. Hoje, escolho confiar em Ti completamente. Em nome de Jesus, amém.</div></div>
@@ -790,7 +486,7 @@ var db = firebase.firestore();
       <div style="color:#6B7280;font-size:14px;line-height:1.7">O projeto <strong style="color:#0F4D3A">Talentos do Reino</strong> é uma iniciativa da IPF que oferece curso de costura básica para mulheres da comunidade, com duplo objetivo: evangelístico e social, proporcionando qualificação profissional.</div>
       <div style="margin-top:12px;background:rgba(15,77,58,.05);border-radius:12px;padding:12px;border-left:4px solid #0F4D3A"><div style="color:#0F4D3A;font-size:13px;font-style:italic;line-height:1.6">"Uma igreja, uma pessoa — glorificar a Deus transformando vidas através do serviço ao próximo."</div></div>
     </div>
-    <div style="padding:0 16px"><a href="https://wa.me/5521988909019?text=Ol%C3%A1%20Irm%C3%A3%20Patr%C3%ADcia!%20Gostaria%20de%20saber%20mais%20sobre%20o%20projeto%20Talentos%20do%20Reino." target="_blank" style="background:#25D366;color:#fff;font-weight:700;font-size:15px;padding:16px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(37,211,102,.3)">💬 Saiba Mais pelo WhatsApp</a></div>
+    <div style="padding:0 16px"><a href="https://wa.me/5521987361216?text=Talentos%20do%20Reino" target="_blank" style="background:#25D366;color:#fff;font-weight:700;font-size:15px;padding:16px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(37,211,102,.3)">💬 Saiba Mais pelo WhatsApp</a></div>
   </div>
 </div>
 <div id="s-literaturas" class="screen">
@@ -942,7 +638,7 @@ var db = firebase.firestore();
     </div>
     <div style="padding:0 16px 10px;color:#9CA3AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px">Gerenciar</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 16px 16px">
-      <div onclick="go('admin-devocionais')" style="background:#fff;border-radius:16px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(15,77,58,.05);cursor:pointer"><div style="font-size:26px;margin-bottom:6px">📖</div><div style="color:#0F4D3A;font-size:11px;font-weight:700">Devocionais</div></div>
+      <div style="background:#fff;border-radius:16px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(15,77,58,.05);cursor:pointer"><div style="font-size:26px;margin-bottom:6px">📖</div><div style="color:#0F4D3A;font-size:11px;font-weight:700">Devocionais</div></div>
       <div style="background:#fff;border-radius:16px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(15,77,58,.05);cursor:pointer"><div style="font-size:26px;margin-bottom:6px">📢</div><div style="color:#0F4D3A;font-size:11px;font-weight:700">Avisos</div></div>
       <div style="background:#fff;border-radius:16px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(15,77,58,.05);cursor:pointer"><div style="font-size:26px;margin-bottom:6px">📅</div><div style="color:#0F4D3A;font-size:11px;font-weight:700">Agenda</div></div>
       <div style="background:#fff;border-radius:16px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(15,77,58,.05);cursor:pointer"><div style="font-size:26px;margin-bottom:6px">🙏</div><div style="color:#0F4D3A;font-size:11px;font-weight:700">Oracoes</div></div>
@@ -952,53 +648,6 @@ var db = firebase.firestore();
     <div style="padding:0 16px"><button onclick="tab('home')" style="width:100%;background:#0F4D3A;color:#fff;padding:15px;border-radius:16px;font-weight:700;font-size:15px;box-shadow:0 8px 24px rgba(15,77,58,.3);cursor:pointer;border:none;font-family:'Inter',sans-serif">Ver App ao Vivo</button></div>
   </div>
 </div>
-
-<div id="s-admin-devocionais" class="screen">
-  <div style="background:#0F4D3A;padding:44px 16px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50">
-    <button onclick="go('admin-dashboard')" style="color:rgba(255,255,255,.9);font-size:24px;background:none;border:none;cursor:pointer;padding:4px">←</button>
-    <span style="color:#fff;font-weight:700;font-size:18px;flex:1">Devocionais</span>
-    <button onclick="abrirFormDevocional()" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:12px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">+ Nova</button>
-  </div>
-
-  <!-- FORMULÁRIO NOVA/EDITAR DEVOCIONAL -->
-  <div id="form-devo" style="display:none;margin:16px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 2px 12px rgba(15,77,58,.08)">
-    <div style="color:#0F4D3A;font-weight:700;font-size:16px;margin-bottom:4px" id="form-devo-titulo-label">Nova Devocional</div>
-    <div style="color:#9CA3AF;font-size:12px;margin-bottom:16px" id="form-devo-by"></div>
-
-    <label style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">Data de Publicação *</label>
-    <input type="date" id="devo-data" style="width:100%;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;font-size:14px;outline:none;margin-bottom:12px;font-family:'Inter',sans-serif">
-
-    <label style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">Título *</label>
-    <input id="devo-titulo" placeholder="Ex: Confiança em Deus" style="width:100%;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;font-size:14px;outline:none;margin-bottom:12px;font-family:'Inter',sans-serif">
-
-    <label style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">Versículo *</label>
-    <textarea id="devo-versiculo" rows="3" placeholder="Ex: Confie no Senhor de todo o seu coração..." style="width:100%;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;font-size:14px;outline:none;margin-bottom:6px;font-family:'Inter',sans-serif;resize:none"></textarea>
-    <input id="devo-referencia" placeholder="Referência (ex: Provérbios 3:5-6)" style="width:100%;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;font-size:14px;outline:none;margin-bottom:12px;font-family:'Inter',sans-serif">
-
-    <label style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">Reflexão *</label>
-    <textarea id="devo-reflexao" rows="4" placeholder="Escreva a reflexão..." style="width:100%;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;font-size:14px;outline:none;margin-bottom:12px;font-family:'Inter',sans-serif;resize:none"></textarea>
-
-    <label style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">Aplicação Prática *</label>
-    <textarea id="devo-aplicacao" rows="3" placeholder="Como aplicar na vida..." style="width:100%;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;font-size:14px;outline:none;margin-bottom:12px;font-family:'Inter',sans-serif;resize:none"></textarea>
-
-    <label style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px">Oração</label>
-    <textarea id="devo-oracao" rows="3" placeholder="Oração do dia..." style="width:100%;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;font-size:14px;outline:none;margin-bottom:16px;font-family:'Inter',sans-serif;resize:none"></textarea>
-
-    <div id="devo-form-msg" style="display:none;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;text-align:center"></div>
-
-    <div style="display:flex;gap:10px">
-      <button onclick="salvarDevocional()" style="flex:1;background:#0F4D3A;color:#fff;font-weight:700;font-size:14px;padding:14px;border-radius:14px;cursor:pointer;border:none;font-family:'Inter',sans-serif;box-shadow:0 6px 20px rgba(15,77,58,.3)">💾 Salvar Devocional</button>
-      <button onclick="cancelarFormDevocional()" style="padding:14px 16px;background:#F3F4F6;color:#6B7280;font-weight:600;font-size:14px;border-radius:14px;cursor:pointer;border:none;font-family:'Inter',sans-serif">Cancelar</button>
-    </div>
-  </div>
-
-  <!-- LISTA DE DEVOCIONAIS -->
-  <div style="padding:0 16px 80px">
-    <div id="devo-loading" style="text-align:center;padding:40px;color:#9CA3AF;font-size:14px">Carregando devocionais...</div>
-    <div id="devo-lista"></div>
-  </div>
-</div>
-
 <nav class="bnav" id="bnav">
   <div class="bi active" id="bi-home" onclick="tab('home')"><div class="bi-icon">🏠</div><div class="bi-label">Início</div><div class="bi-dot"></div></div>
   <div class="bi" id="bi-cultos" onclick="tab('cultos')"><div class="bi-icon">⛪</div><div class="bi-label">Cultos</div></div>
@@ -1007,109 +656,83 @@ var db = firebase.firestore();
   <div class="bi" id="bi-mais" onclick="tab('mais')"><div class="bi-icon">☰</div><div class="bi-label">Mais</div></div>
 </nav>
 </div>
-
 <script>
-var cs = 'home';
-var hist = [];
-var adm = null;
-var TABS = ['home','cultos','comunidade','literaturas','mais'];
-var ADMIN = ['admin-login','admin-dashboard'];
+var cs='home', hist=[], adm=null;
+var TABS=['home','cultos','comunidade','literaturas','mais'];
+var ADMIN=['admin-login','admin-dashboard'];
 
-function initApp() {
-  try {
+window.addEventListener('load', function() {
+  setTimeout(function() {
     var sp = document.getElementById('splash');
-    if (sp) {
-      sp.style.opacity = '0';
-      sp.style.transition = 'opacity 0.5s';
-      setTimeout(function() { sp.style.display = 'none'; }, 500);
-    }
-    // Garantir que a home está ativa
-    var home = document.getElementById('s-home');
-    if (home) home.classList.add('active');
-    var saved = localStorage.getItem('adm');
-    if (saved) { adm = JSON.parse(saved); aupd(); }
-    var wppJoined = localStorage.getItem('wpp_joined');
-    if (wppJoined) {
-      var fab = document.getElementById('wpp-fab');
-      if (fab) fab.style.display = 'none';
-    }
-    var d = new Date();
-    var el = document.getElementById('ddate');
-    if (el) el.textContent = d.toLocaleDateString('pt-BR');
-  } catch(e) {}
-}
-
-setTimeout(initApp, 2000);
+    sp.classList.add('hide');
+    setTimeout(function() {
+      sp.style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      var d = new Date();
+      var el = document.getElementById('ddate');
+      if (el) el.textContent = d.toLocaleDateString('pt-BR', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      try {
+        var saved = localStorage.getItem('adm');
+        if (saved) { adm = JSON.parse(saved); aupd(); }
+        var wm = localStorage.getItem('wm_done');
+        if (!wm) {
+          setTimeout(function() {
+            document.getElementById('welcome-modal').classList.add('show');
+          }, 1500);
+        }
+      } catch(e) {}
+    }, 500);
+  }, 2600);
+});
 
 function act(n) {
-  var screens = document.querySelectorAll('.screen');
-  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   var t = document.getElementById('s-' + n);
   if (t) { t.classList.add('active'); t.scrollTop = 0; window.scrollTo(0,0); cs = n; }
-  var bnav = document.getElementById('bnav');
-  var fab = document.getElementById('wpp-fab');
-  var isAdmin = ADMIN.indexOf(n) >= 0;
-  if (bnav) bnav.style.display = isAdmin ? 'none' : 'flex';
-  if (fab) fab.style.display = isAdmin ? 'none' : (localStorage.getItem('wpp_joined') ? 'none' : 'flex');
+  document.getElementById('bnav').style.display = ADMIN.indexOf(n) >= 0 ? 'none' : 'flex';
 }
-
 function go(n) { hist.push(cs); act(n); }
-
 function tab(n) {
-  hist = [];
-  act(n);
-  var bis = document.querySelectorAll('.bi');
-  for (var i = 0; i < bis.length; i++) {
-    bis[i].classList.remove('active');
-    var dot = bis[i].querySelector('.bi-dot');
-    if (dot) dot.style.display = 'none';
-  }
+  hist = []; act(n);
+  document.querySelectorAll('.bi').forEach(function(b) { b.classList.remove('active'); var d = b.querySelector('.bi-dot'); if (d) d.style.display = 'none'; });
   var ab = document.getElementById('bi-' + n);
-  if (ab) {
-    ab.classList.add('active');
-    var dot = ab.querySelector('.bi-dot');
-    if (dot) dot.style.display = 'block';
-  }
+  if (ab) { ab.classList.add('active'); var d = ab.querySelector('.bi-dot'); if (d) d.style.display = 'block'; }
 }
-
 function back() {
   if (hist.length > 0) {
-    var p = hist.pop();
-    act(p);
+    var p = hist.pop(); act(p);
     if (TABS.indexOf(p) >= 0) {
-      var bis = document.querySelectorAll('.bi');
-      for (var i = 0; i < bis.length; i++) bis[i].classList.remove('active');
-      var el = document.getElementById('bi-' + p);
-      if (el) el.classList.add('active');
+      document.querySelectorAll('.bi').forEach(function(b) { b.classList.remove('active'); });
+      var el = document.getElementById('bi-' + p); if (el) el.classList.add('active');
     }
   } else { tab('home'); }
 }
 
-function abrirWppModal() {
-  var m = document.getElementById('wpp-modal');
-  if (m) m.classList.add('show');
+function wm_aceitar() {
+  var nome = document.getElementById('wm-nome').value.trim();
+  var zap = document.getElementById('wm-zap').value.trim();
+  if (!nome) { alert('Por favor, informe seu nome.'); return; }
+  try { localStorage.setItem('wm_done','1'); localStorage.setItem('wm_nome', nome); if (zap) localStorage.setItem('wm_zap', zap); } catch(e) {}
+  document.getElementById('welcome-modal').classList.remove('show');
+  if (zap) {
+    var msg = 'Ola! Me cadastrei no Filadelfia Conecta.%0ANome: ' + encodeURIComponent(nome) + '%0AWhatsApp: ' + encodeURIComponent(zap);
+    window.open('https://wa.me/5521987361216?text=' + msg, '_blank');
+  }
 }
-
-function fecharWppModal() {
-  var m = document.getElementById('wpp-modal');
-  if (m) m.classList.remove('show');
-}
-
-function wppEntrou() {
-  try { localStorage.setItem('wpp_joined','1'); } catch(e) {}
-  fecharWppModal();
-  var fab = document.getElementById('wpp-fab');
-  if (fab) fab.style.display = 'none';
+function wm_pular() {
+  try { localStorage.setItem('wm_done','1'); } catch(e) {}
+  document.getElementById('welcome-modal').classList.remove('show');
 }
 
 function enviarConselho() {
   var msg = document.getElementById('cons-msg').value.trim();
   if (!msg) { alert('Por favor, escreva sua mensagem antes de enviar.'); return; }
-  var texto = 'Mensagem ao Conselho da IPF: ' + msg;
-  var enc = encodeURIComponent(texto);
+  var enc = encodeURIComponent('Mensagem ao Conselho da IPF:
+
+' + msg);
   var membros = [
     {nome:'Pastor Rafael', num:'5521987361216'},
-    {nome:'Presb. Ailson', num:'5521991571376'},
+    {nome:'Presb. Ailson',  num:'5521991571376'},
     {nome:'Presb. Osvaldo', num:'5521998461235'},
     {nome:'Presb. Gustavo', num:'5521989290880'}
   ];
@@ -1130,12 +753,12 @@ function enviarConselho() {
 
 function cadAniv() {
   var n = document.getElementById('aniv-nome').value.trim();
-  var dt = document.getElementById('aniv-data').value;
+  var d = document.getElementById('aniv-data').value;
   var z = document.getElementById('aniv-zap').value.trim();
-  if (!n || !dt) { alert('Preencha nome e data.'); return; }
+  if (!n || !d) { alert('Preencha nome e data.'); return; }
   try {
     var list = JSON.parse(localStorage.getItem('anivs') || '[]');
-    list.push({nome:n, data:dt, zap:z});
+    list.push({nome:n, data:d, zap:z});
     localStorage.setItem('anivs', JSON.stringify(list));
   } catch(e) {}
   alert('Cadastro realizado! Voce recebera parabens no seu dia!');
@@ -1146,18 +769,18 @@ function cadAniv() {
 
 function sdevo() {
   if (navigator.share) {
-    navigator.share({title:'Devocional IPF', text:'Confie no Senhor de todo o seu coracao. Pv 3:5', url:window.location.href});
+    navigator.share({title:'Devocional - IPF', text:'Confie no Senhor de todo o seu coracao. Pv 3:5', url:window.location.href});
   } else {
-    try { navigator.clipboard.writeText('Confie no Senhor de todo o seu coracao. Pv 3:5'); } catch(e) {}
+    navigator.clipboard && navigator.clipboard.writeText('Confie no Senhor de todo o seu coracao. Pv 3:5');
     alert('Versiculo copiado!');
   }
 }
-
 function cpix() {
   var k = 'filadelfia@ipf.org.br';
-  try {
-    navigator.clipboard.writeText(k).then(function() { alert('Chave PIX copiada: ' + k); });
-  } catch(e) { alert('PIX: ' + k); }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(k).then(function() { alert('Chave PIX copiada!
+' + k); });
+  } else { alert('PIX: ' + k); }
 }
 
 function alog() {
@@ -1180,17 +803,12 @@ function alog() {
     document.getElementById('aerr').style.display = 'block';
   }
 }
-
 function aupd() {
   if (!adm) return;
-  var gn = document.getElementById('agn');
-  var aft = document.getElementById('aft');
-  var ar = document.getElementById('arole');
-  if (gn) gn.textContent = 'Ola, ' + adm.fn + '!';
-  if (aft) aft.textContent = adm.full;
-  if (ar) ar.textContent = adm.role === 'MASTER' ? 'Master' : 'Pastor';
+  var gn = document.getElementById('agn'); if (gn) gn.textContent = 'Ola, ' + adm.fn + '!';
+  var aft = document.getElementById('aft'); if (aft) aft.textContent = adm.full;
+  var ar = document.getElementById('arole'); if (ar) ar.textContent = adm.role === 'MASTER' ? 'Master' : 'Pastor';
 }
-
 function aout() {
   adm = null;
   try { localStorage.removeItem('adm'); } catch(e) {}
