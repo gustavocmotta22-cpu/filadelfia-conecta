@@ -410,7 +410,7 @@ body.adm-mode .adm-bar{ display:flex; }
     <div class="card" style="margin:12px 16px 0;padding:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;border-radius:9px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;font-size:14px">📚</div><span style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Reflexão</span></div><div style="color:#6B7280;font-size:14px;line-height:1.7">Vivemos em um mundo que nos pede para depender de nossa própria inteligência. Mas Deus nos convida a uma vida de confiança plena n'Ele.<br><br>Confiar no Senhor de todo o coração implica uma entrega completa — uma confiança que reconhece que Deus é soberano sobre cada detalhe da nossa vida.</div></div>
     <div class="card" style="margin:10px 16px 0;padding:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;border-radius:9px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:14px">✋</div><span style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Aplicação</span></div><div style="color:#6B7280;font-size:14px;line-height:1.7">Hoje, quando você se deparar com uma decisão difícil, pause e ore: Senhor, confio em Ti. Pratique reconhecê-Lo em cada escolha que fizer.</div></div>
     <div class="card" style="margin:10px 16px 0;padding:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="width:28px;height:28px;border-radius:9px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:14px">🙏</div><span style="color:#0F4D3A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Oração</span></div><div style="background:rgba(15,77,58,.04);border-radius:10px;padding:12px;color:#6B7280;font-size:14px;line-height:1.7;font-style:italic">Pai celestial, perdoa-me pelas vezes em que me apoiei em meu próprio entendimento. Hoje, escolho confiar em Ti completamente. Em nome de Jesus, amém.</div></div>
-    <div style="padding:12px 16px 0"><button class="sbtn" onclick="compartilharDevo()">📸 Compartilhar como Imagem</button></div>
+    <div style="margin:10px 16px 0;background:#FFFBEB;border:1px solid #FDE68A;border-radius:14px;padding:10px 14px"><div style="color:#92400E;font-size:11px;font-weight:700;margin-bottom:2px">📖 Versão Bíblica</div><div style="color:#78350F;font-size:12px">Todos os versículos utilizam a versão <strong>ARA — Almeida Revista e Atualizada</strong>, conforme o padrão da IPB.</div></div><div style="padding:10px 16px 0"><button class="sbtn" onclick="compartilharDevo()">📸 Compartilhar como Imagem</button></div>
   </div>
 </div>
 <div id="s-loc" class="screen">
@@ -961,15 +961,7 @@ function carregarAniversariantes(){
   }).catch(function(){});
 }
 
-function carregarDevocionalDia(){
-  var hoje=new Date().toISOString().split('T')[0];
-  db.collection('devocionais').where('data','==',hoje).limit(1).get().then(function(snap){
-    if(snap.empty) return;
-    var dv=snap.docs[0].data();
-    var campos={'devo-titulo-txt':dv.titulo,'devo-ver-txt':dv.versiculo,'devo-ref-txt':dv.referencia,'devo-ref-body':dv.reflexao,'devo-aplic-body':dv.aplicacao,'devo-oracao-body':dv.oracao};
-    Object.keys(campos).forEach(function(id){ var el=document.getElementById(id); if(el&&campos[id]) el.textContent=campos[id]; });
-  }).catch(function(){});
-}
+
 
 
 
@@ -1350,6 +1342,147 @@ function baixarImg(url){
   var a=document.createElement('a');
   a.href=url; a.download='devocional-ipf.png';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function carregarDevocionalDia(){
+  var hoje = new Date().toISOString().split('T')[0];
+  // Atualizar data no header
+  var el = document.getElementById('ddate');
+  if(el){
+    var d2=new Date();
+    var dias=['Domingo','Segunda-Feira','Terça-Feira','Quarta-Feira','Quinta-Feira','Sexta-Feira','Sábado'];
+    var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    el.textContent = dias[d2.getDay()]+', '+d2.getDate()+' de '+meses[d2.getMonth()]+' de '+d2.getFullYear();
+  }
+
+  if(!db){ gerarDevoAutoIA(); return; }
+
+  // 1. Tentar Firebase primeiro
+  db.collection('devocionais').where('data','==',hoje).limit(1).get()
+  .then(function(snap){
+    if(!snap.empty){
+      // ✅ Encontrou devocional do ADM
+      var dv = snap.docs[0].data();
+      preencherDevo({
+        titulo: dv.titulo||'Devocional do Dia',
+        versiculo: dv.versiculo||'',
+        referencia: dv.referencia||'',
+        reflexao: dv.reflexao||'',
+        aplicacao: dv.aplicacao||'',
+        oracao: dv.oracao||'',
+        fonte: 'admin'
+      });
+    } else {
+      // 2. Não há devocional → gerar com IA
+      gerarDevoAutoIA();
+    }
+  })
+  .catch(function(){ gerarDevoAutoIA(); });
+}
+
+function gerarDevoAutoIA(){
+  // Mostrar loading
+  mostrarLoadingDevo();
+
+  // Buscar versículo aleatório ARA
+  fetch('https://www.abibliadigital.com.br/api/verses/ara/random')
+  .then(function(r){ return r.json(); })
+  .then(function(v){
+    var texto = v.text || v.versiculo || '';
+    var livro = v.book && v.book.name ? v.book.name : (v.book_name||'');
+    var cap = v.chapter||'';
+    var ver = v.number||v.verse||'';
+    var ref = livro+' '+cap+':'+ver;
+
+    // Chamar Claude para gerar devocional
+    return gerarComIA(texto, ref);
+  })
+  .catch(function(){
+    // API Bíblia falhou — usar versículo padrão
+    gerarComIA(
+      'Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento. Reconhece-o em todos os teus caminhos, e ele endireitará as tuas veredas.',
+      'Provérbios 3:5-6'
+    );
+  });
+}
+
+function gerarComIA(versiculo, referencia){
+  var PROMPT = 'Você é um pastor presbiteriano reformado. Com base no versículo bíblico abaixo (versão ARA), gere um devocional diário em português do Brasil com a seguinte estrutura JSON exata, sem markdown, sem texto fora do JSON:\n\n{"titulo":"<título inspirado no versículo, máx 8 palavras>","reflexao":"<reflexão meditativa de 3 a 4 parágrafos curtos>","aplicacao":"<ação prática para o dia, 2 a 3 frases>","oracao":"<oração em primeira pessoa, 3 a 4 frases>"}\n\nVersículo: '+versiculo+'\nReferência: '+referencia;
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      messages: [{role:'user', content: PROMPT}]
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    var txt = '';
+    if(data.content && data.content[0] && data.content[0].text){
+      txt = data.content[0].text.trim();
+    }
+    // Limpar possível markdown
+    txt = txt.replace(/```json/g,'').replace(/```/g,'').trim();
+    var obj = JSON.parse(txt);
+    preencherDevo({
+      titulo: obj.titulo||'Devocional do Dia',
+      versiculo: versiculo,
+      referencia: referencia,
+      reflexao: obj.reflexao||'',
+      aplicacao: obj.aplicacao||'',
+      oracao: obj.oracao||'',
+      fonte: 'ia'
+    });
+  })
+  .catch(function(){
+    // Fallback se IA falhar
+    preencherDevo({
+      titulo: 'Confie em Deus',
+      versiculo: 'Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento.',
+      referencia: 'Provérbios 3:5',
+      reflexao: 'A confiança plena em Deus é o fundamento de uma vida de fé. Quando reconhecemos nossa limitação e colocamos nossa vida nas mãos do Senhor, Ele dirige nossos caminhos com sabedoria e amor.',
+      aplicacao: 'Hoje, antes de tomar qualquer decisão, pause e ore: "Senhor, guia os meus passos". Reconheça a soberania de Deus em cada área da sua vida.',
+      oracao: 'Pai celestial, ensina-me a confiar plenamente em Ti e não depender das minhas próprias forças. Que o Teu Espírito guie cada decisão do meu dia. Em nome de Jesus, amém.',
+      fonte: 'fallback'
+    });
+  });
+}
+
+function mostrarLoadingDevo(){
+  var campos = ['devo-titulo-txt','devo-ref-body','devo-aplic-body','devo-oracao-body'];
+  campos.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.textContent='Carregando...';
+  });
+  var vt=document.getElementById('devo-ver-txt');
+  if(vt) vt.textContent='Buscando versículo do dia...';
+  var rt=document.getElementById('devo-ref-txt');
+  if(rt) rt.textContent='';
+}
+
+function preencherDevo(dv){
+  var map = {
+    'devo-titulo-txt': dv.titulo,
+    'devo-ver-txt':    '"'+dv.versiculo+'"',
+    'devo-ref-txt':    dv.referencia,
+    'devo-ref-body':   dv.reflexao,
+    'devo-aplic-body': dv.aplicacao,
+    'devo-oracao-body':dv.oracao
+  };
+  Object.keys(map).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.textContent=map[id];
+  });
+  // Badge de fonte
+  var badge=document.getElementById('devo-fonte-badge');
+  if(badge){
+    if(dv.fonte==='admin'){ badge.textContent='✍️ ADM'; badge.style.background='#DCFCE7'; badge.style.color='#166534'; }
+    else if(dv.fonte==='ia'){ badge.textContent='🤖 IA'; badge.style.background='#EFF6FF'; badge.style.color='#1D4ED8'; }
+    else { badge.style.display='none'; }
+  }
 }
 </script>
 
