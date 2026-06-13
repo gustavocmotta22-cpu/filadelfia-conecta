@@ -832,6 +832,18 @@ function dbOp(fn) {
 
 setTimeout(initApp,1500);
 
+// Service Worker — só registra no GitHub Pages
+(function(){
+  if('serviceWorker' in navigator){
+    var host = window.location.hostname;
+    if(host.indexOf('github.io') > -1 || host.indexOf('localhost') > -1){
+      navigator.serviceWorker.register('/filadelfia-conecta/sw.js')
+        .catch(function(e){ console.log('SW:', e.message); });
+    }
+  }
+})();
+
+
 function act(n){
   var ss=document.querySelectorAll('.screen');
   for(var i=0;i<ss.length;i++) ss[i].classList.remove('active');
@@ -875,6 +887,7 @@ function envConselho(){
 }
 
 function enviarOracao(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var nome=document.getElementById('or-nome')?document.getElementById('or-nome').value.trim():'';
   var pedido=document.getElementById('or-ped')?document.getElementById('or-ped').value.trim():'';
   if(!pedido){ alert('Por favor, escreva seu pedido.'); return; }
@@ -911,6 +924,7 @@ function previewAnivFoto(input){
 }
 
 function cadAniv(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var n=document.getElementById('aniv-nome').value.trim();
   var dt=document.getElementById('aniv-data').value;
   var z=document.getElementById('aniv-zap').value.trim();
@@ -930,6 +944,16 @@ function cadAniv(){
 }
 
 function carregarAniversariantes(){
+  var lista=document.getElementById('aniv-lista');
+  var hoje=new Date(); var mesAtual=hoje.getMonth()+1;
+  var nomesMes=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var abrevMes=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var titulo=document.getElementById('aniv-mes-titulo');
+  if(titulo) titulo.textContent='Aniversariantes de '+nomesMes[mesAtual-1];
+  if(!db){
+    if(lista) lista.innerHTML='<div style="text-align:center;color:#9CA3AF;padding:20px;font-size:14px">Conecte-se para ver os aniversariantes 🙏</div>';
+    return;
+  }
   var lista=document.getElementById('aniv-lista'); if(!lista) return;
   var hoje=new Date();
   var mesAtual=hoje.getMonth()+1;
@@ -995,6 +1019,7 @@ function admDevoNovo(){
 function admDevoCancelar(){ document.getElementById('adm-devo-form').style.display='none'; editDevoId=null; }
 function admDevoMsg(txt,ok){ var e=document.getElementById('df-msg'); e.textContent=txt; e.style.display='block'; e.style.background=ok?'#DCFCE7':'#FEE2E2'; e.style.color=ok?'#166534':'#991B1B'; if(ok) setTimeout(function(){e.style.display='none';},2500); }
 function admDevoSalvar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var data=document.getElementById('df-data').value, titulo=document.getElementById('df-titulo').value.trim();
   var versiculo=document.getElementById('df-versiculo').value.trim(), referencia=document.getElementById('df-ref').value.trim();
   var reflexao=document.getElementById('df-reflexao').value.trim(), aplicacao=document.getElementById('df-aplic').value.trim();
@@ -1006,6 +1031,7 @@ function admDevoSalvar(){
   op.then(function(){ admDevoMsg(editDevoId?'Atualizado!':'Salvo!',true); admDevoCancelar(); admDevoCarregar(); }).catch(function(e){ admDevoMsg('Erro: '+e.message,false); });
 }
 function admDevoCarregar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var lista=document.getElementById('adm-devo-lista'); if(!lista) return;
   lista.innerHTML='<div style="text-align:center;padding:30px;color:#9CA3AF">Carregando...</div>';
   db.collection('devocionais').orderBy('data','desc').limit(30).get().then(function(snap){
@@ -1037,11 +1063,13 @@ function admDevoExcluir(id,titulo){
 }
 
 function admAgendaSalvar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var data=document.getElementById('ag-data').value, titulo=document.getElementById('ag-titulo').value.trim();
   if(!data||!titulo){ alert('Data e titulo obrigatorios.'); return; }
   db.collection('agenda').add({data:data,hora:document.getElementById('ag-hora').value.trim(),titulo:titulo,desc:document.getElementById('ag-desc').value.trim()}).then(function(){ alert('Evento adicionado!'); ['ag-data','ag-hora','ag-titulo','ag-desc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admAgendaCarregar(); });
 }
 function admAgendaCarregar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var lista=document.getElementById('adm-agenda-lista'); if(!lista) return;
   db.collection('agenda').orderBy('data').get().then(function(snap){
     var html='';
@@ -1051,11 +1079,13 @@ function admAgendaCarregar(){
 }
 
 function admLiturgiaSalvar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var data=document.getElementById('lt-data').value, nome=document.getElementById('lt-nome').value.trim();
   if(!data||!nome){ alert('Data e nome obrigatorios.'); return; }
   db.collection('liturgia').add({data:data,nome:nome,culto:document.getElementById('lt-culto').value.trim()}).then(function(){ alert('Adicionado!'); ['lt-data','lt-nome','lt-culto'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admLiturgiaCarregar(); });
 }
 function admLiturgiaCarregar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var lista=document.getElementById('adm-liturgia-lista'); if(!lista) return;
   db.collection('liturgia').orderBy('data').get().then(function(snap){
     var html='';
@@ -1065,11 +1095,13 @@ function admLiturgiaCarregar(){
 }
 
 function admAnivSalvar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var nome=document.getElementById('av-nome').value.trim(), data=document.getElementById('av-data').value;
   if(!nome||!data){ alert('Nome e data obrigatorios.'); return; }
   db.collection('aniversariantes').add({nome:nome,data:data,zap:document.getElementById('av-zap').value.trim(),fonte:'admin'}).then(function(){ alert('Aniversariante adicionado!'); ['av-nome','av-data','av-zap'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admAnivCarregar(); carregarAniversariantes(); });
 }
 function admAnivCarregar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var lista=document.getElementById('adm-aniv-lista'); if(!lista) return;
   db.collection('aniversariantes').orderBy('data').get().then(function(snap){
     var html='';
@@ -1079,11 +1111,13 @@ function admAnivCarregar(){
 }
 
 function admLitSalvar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var titulo=document.getElementById('lv-titulo').value.trim(), url=document.getElementById('lv-url').value.trim();
   if(!titulo||!url){ alert('Titulo e link obrigatorios.'); return; }
   db.collection('literaturas').add({titulo:titulo,url:url,desc:document.getElementById('lv-desc').value.trim()}).then(function(){ alert('Literatura adicionada!'); ['lv-titulo','lv-url','lv-desc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admLitCarregar(); });
 }
 function admLitCarregar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var lista=document.getElementById('adm-lit-lista'); if(!lista) return;
   db.collection('literaturas').get().then(function(snap){
     var html='';
@@ -1093,11 +1127,13 @@ function admLitCarregar(){
 }
 
 function admAvisoSalvar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var titulo=document.getElementById('avi-titulo').value.trim(), texto=document.getElementById('avi-texto').value.trim();
   if(!titulo||!texto){ alert('Titulo e texto obrigatorios.'); return; }
   db.collection('avisos').add({titulo:titulo,data:document.getElementById('avi-data').value.trim(),texto:texto,criado:new Date().toISOString()}).then(function(){ alert('Aviso publicado!'); ['avi-titulo','avi-data','avi-texto'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); admAvisosCarregar(); });
 }
 function admAvisosCarregar(){
+  if(!db){ console.log("Firebase nao disponivel"); return; }
   var lista=document.getElementById('adm-avisos-lista'); if(!lista) return;
   db.collection('avisos').orderBy('criado','desc').limit(20).get().then(function(snap){
     var html='';
@@ -1355,7 +1391,11 @@ function carregarDevocionalDia(){
     el.textContent = dias[d2.getDay()]+', '+d2.getDate()+' de '+meses[d2.getMonth()]+' de '+d2.getFullYear();
   }
 
-  if(!db){ gerarDevoAutoIA(); return; }
+  if(!db){
+    // Sem Firebase — tentar IA diretamente
+    gerarDevoAutoIA();
+    return;
+  }
 
   // 1. Tentar Firebase primeiro
   db.collection('devocionais').where('data','==',hoje).limit(1).get()
@@ -1530,24 +1570,6 @@ function preencherDevo(dv){
 </div>
 
 
-<script>
-// Registrar SW e limpar cache antigo
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(regs) {
-    regs.forEach(function(reg) { reg.unregister(); });
-  });
-  setTimeout(function() {
-    navigator.serviceWorker.register('/filadelfia-conecta/sw.js').then(function(reg) {
-      console.log('SW registrado:', reg.scope);
-    }).catch(function(e) { console.log('SW erro:', e); });
-  }, 1000);
-}
-// Limpar caches antigos
-if ('caches' in window) {
-  caches.keys().then(function(names) {
-    names.forEach(function(name) { caches.delete(name); });
-  });
-}
-</script>
+
 </body>
 </html>
