@@ -989,7 +989,7 @@ function aupd(){
   var aft=document.getElementById('aft'); if(aft) aft.textContent=adm.full;
   var ar=document.getElementById('arole'); if(ar) ar.textContent=adm.role==='MASTER'?'Master':'Pastor';
 }
-function aout(){ adm=null; try{localStorage.removeItem('adm');}catch(e){} tab('home'); }
+function aout(){ adm=null; try{localStorage.removeItem('adm');}catch(e){} document.body.classList.remove('adm-mode'); tab('home'); }
 
 function admDevoNovo(){
   editDevoId=null;
