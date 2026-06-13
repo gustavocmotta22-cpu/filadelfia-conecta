@@ -157,6 +157,33 @@ textarea.fi{resize:none;height:100px}
 .ib-sub{color:#9CA3AF;font-size:12px;margin-top:2px}
 .ib-btn{background:#0F4D3A;color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0}
 .ib-close{color:#D1D5DB;font-size:20px;cursor:pointer;padding:4px;background:none;border:none;flex-shrink:0}
+
+/* Botões de edição contextual ADM */
+.adm-edit-btn{
+  position:absolute;top:10px;right:10px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.3);
+  color:#fff;border-radius:10px;
+  padding:5px 10px;font-size:11px;font-weight:700;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  display:none;z-index:20;
+}
+body.adm-mode .adm-edit-btn{ display:flex;align-items:center;gap:4px; }
+.adm-inline-btn{
+  background:#0F4D3A;color:#fff;border:none;border-radius:10px;
+  padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;
+  font-family:'Inter',sans-serif;display:none;gap:5px;align-items:center;
+  margin-top:8px;
+}
+body.adm-mode .adm-inline-btn{ display:flex; }
+.adm-bar{
+  background:linear-gradient(135deg,#0F4D3A,#1a6b50);
+  color:#fff;padding:10px 16px;
+  display:none;align-items:center;justify-content:space-between;
+  font-size:13px;font-weight:600;
+}
+body.adm-mode .adm-bar{ display:flex; }
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -348,6 +375,7 @@ textarea.fi{resize:none;height:100px}
   </div>
 </div>
 <div id="s-liturgia" class="screen">
+  <div class="adm-bar">✏️ Modo ADM — Liturgia<button onclick="go('admin-liturgia')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif">+ Editar</button></div>
   <div class="ph"><button onclick="back()" style="color:rgba(255,255,255,.9);font-size:24px;background:none;border:none;cursor:pointer;padding:4px;position:relative;z-index:10;flex-shrink:0">←</button><span class="ph-title">Escala de Liturgia</span></div>
   <div style="padding:16px">
     <div class="card card-p" style="margin-bottom:14px">
@@ -370,6 +398,7 @@ textarea.fi{resize:none;height:100px}
   </div>
 </div>
 <div id="s-devocional" class="screen">
+  <div class="adm-bar">✏️ Modo ADM — Devocional<button onclick="go('admin-devocionais')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif">+ Editar</button></div>
   <div style="background:#0F4D3A;padding:44px 18px 22px;position:relative;overflow:hidden">
     <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(255,255,255,.1),transparent)"></div>
     <button onclick="back()" style="color:rgba(255,255,255,.9);font-size:24px;background:none;border:none;cursor:pointer;padding:4px;position:relative;z-index:10;flex-shrink:0">←</button>
@@ -525,6 +554,7 @@ textarea.fi{resize:none;height:100px}
   </div>
 </div>
 <div id="s-literaturas" class="screen">
+  <div class="adm-bar">✏️ Modo ADM — Literaturas<button onclick="go('admin-literaturas')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif">+ Editar</button></div>
   <div class="sec-hdr">
     <button onclick="back()" style="color:rgba(255,255,255,.9);font-size:24px;background:none;border:none;cursor:pointer;padding:4px;position:relative;z-index:10;flex-shrink:0">←</button>
     <h1 style="margin-top:8px">Literaturas</h1>
@@ -544,6 +574,7 @@ textarea.fi{resize:none;height:100px}
   </div>
 </div>
 <div id="s-aniversariantes" class="screen">
+  <div class="adm-bar">✏️ Modo ADM — Aniversariantes<button onclick="go('admin-aniversariantes')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif">+ Editar</button></div>
   <div class="ph"><button onclick="back()" style="color:rgba(255,255,255,.9);font-size:24px;background:none;border:none;cursor:pointer;padding:4px;position:relative;z-index:10;flex-shrink:0">←</button><span class="ph-title">Aniversariantes</span></div>
   <div style="padding:16px">
     <!-- Card título com botão atualizar -->
@@ -592,6 +623,7 @@ textarea.fi{resize:none;height:100px}
   </div>
 </div>
 <div id="s-avisos" class="screen">
+  <div class="adm-bar">✏️ Modo ADM — Avisos<button onclick="go('admin-avisos')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif">+ Editar</button></div>
   <div class="ph"><button onclick="back()" style="color:rgba(255,255,255,.9);font-size:24px;background:none;border:none;cursor:pointer;padding:4px;position:relative;z-index:10;flex-shrink:0">←</button><span class="ph-title">Avisos da Igreja</span></div>
   <div style="padding:16px">
     <div class="card card-p" style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:42px;height:42px;background:#F5F3FF;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px">🏛</div><div><div style="color:#1A1A1A;font-weight:700;font-size:14px">Reunião do Conselho</div><div style="color:#9CA3AF;font-size:12px">20 Jun • 19h30</div></div></div><p style="color:#6B7280;font-size:13px;line-height:1.5">O Conselho da Igreja se reunirá para tratar de assuntos administrativos e pastorais.</p></div>
@@ -600,6 +632,7 @@ textarea.fi{resize:none;height:100px}
   </div>
 </div>
 <div id="s-agenda" class="screen">
+  <div class="adm-bar">✏️ Modo ADM — Agenda<button onclick="go('admin-agenda')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif">+ Editar</button></div>
   <div class="ph"><button onclick="back()" style="color:rgba(255,255,255,.9);font-size:24px;background:none;border:none;cursor:pointer;padding:4px;position:relative;z-index:10;flex-shrink:0">←</button><span class="ph-title">Agenda da Igreja</span></div>
   <div style="padding:16px">
     <div class="card card-p">
@@ -946,6 +979,7 @@ function alog(){
   var e=document.getElementById('aem').value; var p=document.getElementById('apw').value; var ok=false;
   if(e==='admin@filadelfia.app'&&p==='FiladelfiaCristo2026!'){ adm={fn:'Administrador',role:'MASTER',full:'ADM Administrador Master'}; ok=true; }
   else if(e==='pastor@filadelfia.app'&&p==='Pastor@Filadelfia2026'){ adm={fn:'Pastor Rafael',role:'PASTOR',full:'ADM Pastor Rafael Ribeiro'}; ok=true; }
+  else if(e==='adm@ipf.app'&&p==='IPF@43tqw2a52026!'){ adm={fn:'Administrador IPF',role:'MASTER',full:'ADM Principal IPF'}; ok=true; }
   if(ok){ try{localStorage.setItem('adm',JSON.stringify(adm));}catch(x){} document.getElementById('aerr').style.display='none'; aupd(); go('admin-dashboard'); }
   else{ document.getElementById('aerr').style.display='block'; }
 }
